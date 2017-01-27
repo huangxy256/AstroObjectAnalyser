@@ -5,6 +5,7 @@ from astropy.coordinates import ICRS, FK5, Angle
 import astropy.units as u
 import numpy as np
 from astrofunc.Footprint.footprint import CheckFootprint
+import astrofunc.constants as const
 
 
 
@@ -21,7 +22,6 @@ class StrongLensSystem(object):
     can be added by the subclass (hopefully in hidden function starting with _) - except
     add_image_data which should be replaced with more tailored ones.
     """
-    #TODO add a method that lets the instance merge with another stronglenssystem instance
 
     def __init__(self, name):
         """
@@ -76,7 +76,7 @@ class StrongLensSystem(object):
         assert survey_name in surveys,'Survey requested (%s) not in database, please pick one of: %s' %(survey_name,surveys)
 
         checkFootprint = CheckFootprint()
-        return checkFootprint.check_footprint(self.ra,self.dec,surveyname = survey_name)
+        return checkFootprint.check_footprint(self.ra, self.dec, surveyname=survey_name)
 
     def add_image_data(self, imagedata, attrname):
         """
@@ -113,17 +113,25 @@ class StrongLensSystem(object):
                 raise(UserWarning,'duplicated attribute %s has not been changed. To force replace use replace = True'%attr)
         pass
 
-
-    #TODO might want to think about creating a superclass of image_data that support and define these features (that can be replaced in subclass)
-
-
     def set_data_type(self, attrname, data_type=None):
+        """
+        a data type is needed to query information in a .fits file. FITS files may have different structure.
+        The datatype variable is meant to deal with it.
+        :param attrname: data name
+        :param data_type: string
+        :return: data_type changed in attrname
+        """
         if data_type is None:
             data_type = getattr(self, 'data_type')
         image_data_obj = getattr(self, attrname)
         image_data_obj.data_type = data_type
 
     def get_full_image(self, attrname):
+        """
+
+        :param attrname: image name
+        :return: full image
+        """
         image_data_obj = getattr(self, attrname)
         return image_data_obj.image_full()
 
@@ -149,71 +157,149 @@ class StrongLensSystem(object):
         return image_path, wht_path
 
     def get_cutout_image(self, attrname, cutout_scale, force=False):
+        """
+
+        :param attrname: image file name
+        :param cutout_scale: number of pixels of cutout
+        :param force: bool, if cutout already exists, only force=True will create another cutout
+        :return: cutout image
+        """
         image_data_obj = getattr(self, attrname)
         if force is True:
             image_data_obj.del_cutout()
-        image_data_obj.cutout_scale = int(cutout_scale/2)
+        image_data_obj.cutout_scale = int(cutout_scale)
         return image_data_obj.data_cutout
 
     def del_cutout_image(self, attrname):
+        """
+
+        :param attrname: image file name
+        :return: deletes cutout of attrname image
+        """
         image_data_obj = getattr(self, attrname)
         image_data_obj.del_cutout()
 
     def get_cutout_header(self, attrname):
+        """
+
+        :param attrname: image file name
+        :return: header of cutout image of attrname
+        """
         image_data_obj = getattr(self, attrname)
         return image_data_obj.header_cutout
 
     def get_header(self, attrname):
+        """
+
+        :param attrname: image file name
+        :return: header of full image attrname
+        """
         image_data_obj = getattr(self, attrname)
         return image_data_obj.header
 
     def get_header_primary(self, attrname):
+        """
+
+        :param attrname: image file name
+        :return: primary header (if present)
+        """
         image_data_obj = getattr(self, attrname)
         return image_data_obj.header_primary
 
     def get_pixel_scale(self, attrname):
+        """
+        returns pixel scale
+        :param attrname: image file name
+        :return: returns pixel scale (unrotated)
+        """
         image_data_obj = getattr(self, attrname)
         return image_data_obj.cd1, image_data_obj.cd2
 
     def get_pixel_number(self, attrname):
+        """
+
+        :param attrname: image file name
+        :return: number of pixels in axis1, axis2
+        """
         image_data_obj = getattr(self, attrname)
         return image_data_obj.naxis1, image_data_obj.naxis2
 
-    def get_coordinate_grid(self, attrname):
+    def get_coordinate_grid_absolute(self, attrname):
+        """
+        pixel coordinates in arc sec relative to the center (lens system coordinates)
+        ATTENTION RA is scaled. Use get_coordinate_grid_relative to have relative arc sec coordinates.
+        :param attrname:
+        :return:
+        """
         image_data_obj = getattr(self, attrname)
         ra_coords, dec_coords = image_data_obj.get_cutout_coords
         return ra_coords, dec_coords
 
     def get_coordinate_grid_relative(self, attrname):
+        """
+        relative RA, DEC coordinates in arcsec to the center (lens system coordinates)
+        :param attrname:
+        :return:
+        """
         image_data_obj = getattr(self, attrname)
         ra_coords, dec_coords = image_data_obj.get_cutout_coords
         cos_dec = np.cos(self.dec/360*2*np.pi)
         return ra_coords*cos_dec, dec_coords
 
     def get_coordinate_subgrid(self, attrname, subgrid_res=2):
+        """
+
+        :param attrname: image file name
+        :param subgrid_res: subgrid resolution
+        :return: relative arc secs from center of the lens system
+        """
         image_data_obj = getattr(self, attrname)
         ra_coords, dec_coords = image_data_obj.get_subgrid(subgrid_res)
         return ra_coords, dec_coords
 
     def get_image_position(self):
+        """
+
+        :return: coordinates relative of image positions, in relative arc sec (e.g. lensed quasars)
+        """
         if hasattr(self, 'image_pos_ra') and hasattr(self, 'image_pos_dec'):
             return self.image_pos_ra, self.image_pos_dec
         else:
             raise ValueError('Strong Lens system does not provide image positions')
 
     def get_exposure_time(self, attrname):
+        """
+
+        :param attrname: image file name
+        :return: exposure time of image
+        """
         image_data_obj = getattr(self, attrname)
         return image_data_obj.exposure_time
 
     def get_exposure_map(self, attrname):
+        """
+
+        :param attrname: image file name
+        :return: effective exposure time for each pixel (wheight map)
+        """
         image_data_obj = getattr(self,attrname)
         return image_data_obj.exposure_map
 
     def get_CCD_gain(self, attrname):
+        """
+
+        :param attrname: image file name
+        :return: CCD gain
+        """
         image_data_obj = getattr(self,attrname)
         return image_data_obj.CCD_gain
 
-    def get_psf_kernel(self, attrname, filter_object=None):
+    def get_psf_kernel(self, attrname):
+        """
+
+        :param attrname: image file name
+        :return: point spread function
+        """
         image_data_obj = getattr(self,attrname)
         return image_data_obj.psf_kernel
 
@@ -230,25 +316,55 @@ class StrongLensSystem(object):
         return image_data_obj.get_psf_data
 
     def get_cat(self, attrname):
+        """
+
+        :param attrname: image file name
+        :return: SourceExtractor catalogue of image
+        """
         image_data_obj = getattr(self,attrname)
         return image_data_obj.get_cat
 
     def shift_cutout_center(self, attrname, delta_ra, delta_dec):
+        """
+
+        :param attrname: image file name
+        :param delta_ra: shift in RA [arcsec]
+        :param delta_dec: shift in DEC [arcsec]
+        :return: relocates center coordinate frame of lens system
+        """
         image_data_obj = getattr(self, attrname)
-        image_data_obj.ra_cutout_cent = image_data_obj.ra + delta_ra/3600.
+        cos_dec = np.cos(self.dec / 360 * 2 * np.pi)
+        image_data_obj.ra_cutout_cent = image_data_obj.ra + delta_ra/3600./cos_dec
         image_data_obj.dec_cutout_cent = image_data_obj.dec + delta_dec/3600.
+        print("WARNING: This command may have unexpected consequences for the relative coordinate system!")
 
     def get_pixel_zero_point(self, attrname):
+        """
+        get pixel coordinate of lens system coordinate
+        :param attrname: image file name
+        :return: x_pix, y_pix
+        """
         image_data_obj = getattr(self, attrname)
         x0, y0 = image_data_obj.get_pixel_zero_point
         return x0, y0
 
     def get_transform_matrix_angle2pix(self, attrname):
+        """
+        linear transformation matrix of relative angular [arcsec] to pixel coordinates
+        :param attrname: image file name
+        :return: 2x2 matrix
+        """
         image_data_obj = getattr(self, attrname)
         pix2coord_transform, coord2pix_transform = image_data_obj.transforms
         return coord2pix_transform
 
     def get_HDUFile(self, attrname, force=False):
+        """
+
+        :param attrname: image file name
+        :param force: force a new creation
+        :return: SourceExtractor raw output HDUFile
+        """
         image_data_obj = getattr(self, attrname)
         HDUFile, image_no_border = image_data_obj.get_HDUFile(force)
         return HDUFile, image_no_border
@@ -277,7 +393,7 @@ class StrongLensSystem(object):
         catalogue image positions relative to center of system in arcsec
         :return: catalogue of arcsec in x and y for the multiple image system
         """
-        arcsec = 4*np.pi/360/3600
+        arcsec = const.arcsec
         assert hasattr(self, 'image_pos_str')
         assert hasattr(self, 'ra')
         assert hasattr(self, 'dec')
