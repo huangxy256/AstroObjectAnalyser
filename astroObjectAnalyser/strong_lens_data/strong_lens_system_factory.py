@@ -31,7 +31,7 @@ class StrongLensSystemFactory(object):
 
         data_list = self.data_manager.get_data(input_data, datatype='sysdata_file')
         lens_system_list = self.create_from_namedtuple(data_list)
-        return  lens_system_list
+        return lens_system_list
 
     def create_from_central(self):
         """
@@ -59,7 +59,6 @@ class StrongLensSystemFactory(object):
         # TODO make sure the file gets also updated locally
         self.data_manager.update_pickle(lens_system)
         print('lens system list updated')
-
 
     def create_from_namedtuple(self, data_list):
 
@@ -96,7 +95,6 @@ class StrongLensSystemFactory(object):
             #TODO don't forget to write unit tests
 
         return lens_system_list
-
 
     def find_from_central(self, system_name, pickle=False):
         """

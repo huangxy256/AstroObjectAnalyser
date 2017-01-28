@@ -15,6 +15,7 @@ import shutil
 import astropy.io.fits as pyfits
 import numpy as np
 
+
 class DataManager(object):
     """
     manages the data for strong lensing systems. Acts as a layer between the
