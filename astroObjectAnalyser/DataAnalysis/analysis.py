@@ -155,9 +155,9 @@ class Analysis(object):
         """
         kwargs_cut = self.estimate_star_thresholds(cat)
         mask = self.find_objects(cat, kwargs_cut)
-        star_list = self.get_objects_image(image, cat, mask, cut_radius= 10, cut_fixed= 61)
+        star_list = self.get_objects_image(image, cat, mask, cut_radius=10, cut_fixed= 61)
         fitting = Fitting()
-        mean_list, std_list = fitting.fit_sample(star_list, mean, rms, poisson, n_walk=50, n_iter=50, threadCount = 1, psf_type = psf_type)
+        mean_list, std_list = fitting.fit_sample(star_list, mean, rms, poisson, n_walk=50, n_iter=50, threadCount=1, psf_type=psf_type)
         kernel, mean_list, restrict_psf, star_list_shift = self.stacking(star_list, mean_list, mean, rms, poisson, psf_type, restrict_psf= restrict_psf)
         return kernel, mean_list, restrict_psf
 

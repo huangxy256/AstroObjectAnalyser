@@ -1,16 +1,13 @@
-__author__ = 'amaraa'
+__author__ = 'amaraa & sibirrer'
 
 from astropy.coordinates import ICRS, FK5, Angle
 
 import astropy.units as u
 import numpy as np
+
 from astrofunc.Footprint.footprint import CheckFootprint
 import astrofunc.constants as const
 
-
-
-# from StrongLensRep.strong_lens_data.strong_lens_image_data import StrongLensImageData
-# from lenstronomy.Footprint.footprint import CheckFootprint
 
 class StrongLensSystem(object):
     """
@@ -29,13 +26,7 @@ class StrongLensSystem(object):
         """
         self.name = name
         self.tile_name = name
-        # self.ra = ra
-        # self.dec = dec
         self.available_frames = []
-        # self.data_manager = DataManager()
-        # self.convert_angel_units()
-
-        # self.local_cache = tempfile.mkdtemp()
 
 
     def add_info_attribute(self, attrname, info_data, replace=False):
@@ -80,6 +71,30 @@ class StrongLensSystem(object):
         simplest possible version of _add_image_data. Here we simply create an
         attribute for imagedata instance. *Can be replaced by subclass*
         """
+        setattr(self, attrname, imagedata)
+        self.available_frames.append(attrname)
+
+    def add_image_data_init(self, attrname, local_filename=None, local_psf_filename=None, local_wht_filename=None,
+                       ra=None, dec=None, ra_cutout_cent=None, dec_cutout_cent=None,
+                       cutout_scale=None, data_type='HST'):
+        """
+        adds an image_data class to the astro data object.
+        Tries to take over all possible configurations of the object class
+        """
+        from astroObjectAnalyser.strong_lens_data.strong_lens_image_data import StrongLensImageData
+        if ra is None:
+            ra = self.ra
+        if dec is None:
+            dec = self.dec
+        if ra_cutout_cent is None and hasattr(self, "ra_cutout_cent"):
+            ra_cutout_cent = self.ra_cutout_cent
+        if dec_cutout_cent is None and hasattr(self, "dec_cutout_cent"):
+            dec_cutout_cent = self.dec_cutout_cent
+        imagedata = StrongLensImageData(local_filename=local_filename, local_psf_filename=local_psf_filename,
+                                        local_wht_filename=local_wht_filename, ra=ra, dec=dec,
+                                        ra_cutout_cent=ra_cutout_cent, dec_cutout_cent=dec_cutout_cent,
+                                        cutout_scale=cutout_scale, data_type=data_type)
+
         setattr(self, attrname, imagedata)
         self.available_frames.append(attrname)
 

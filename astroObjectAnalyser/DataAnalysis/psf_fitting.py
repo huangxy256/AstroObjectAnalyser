@@ -480,5 +480,3 @@ class Fitting(object):
             elif psf_type == 'moffat':
                 mean_list[i] = self.moffat_fit(image, mean, sigma, poisson, n_walker=n_walk, n_iter=n_iter, threadCount = threadCount)
         return mean_list
-
-    # def fit_sample_pso(self, star_list, mean, sigma, poisson, walkerRatio=10, n_run= 1000, n_burn=1000, threadCount = 1, psf_type = 'gaussian'):

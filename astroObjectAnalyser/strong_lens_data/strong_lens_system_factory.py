@@ -1,7 +1,7 @@
 
 __author__ = 'sibirrer'
 
-from strong_lens_system import StrongLensSystemData
+from astroObjectAnalyser.strong_lens_system_superclass import StrongLensSystem
 from astroObjectAnalyser.strong_lens_data.data_manager import DataManager
 import os
 
@@ -60,7 +60,7 @@ class StrongLensSystemFactory(object):
 
         for i in range(0, len(data_list)):
 
-            lens_system = StrongLensSystemData('')
+            lens_system = StrongLensSystem('')
             data_cat = data_list[i].data_cat
             data_image = data_list[i].data_image
             # print(len(data_cat))
@@ -79,7 +79,7 @@ class StrongLensSystemFactory(object):
                 ra = lens_system.ra
                 dec = lens_system.dec
 
-                lens_system.add_image_data(filename, attrname, ra=ra, dec=dec, ra_cutout_cent=ra, dec_cutout_cent=dec,
+                lens_system.add_image_data_init(filename, attrname, ra=ra, dec=dec, ra_cutout_cent=ra, dec_cutout_cent=dec,
                                            data_manager=self.data_manager,
                                            cutout_filename=None, cutout_scale=None)
 

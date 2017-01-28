@@ -8,7 +8,7 @@ from __future__ import print_function, division, absolute_import, unicode_litera
 
 import pytest
 import os
-from astroObjectAnalyser.strong_lens_data.strong_lens_system import StrongLensSystemData
+from astroObjectAnalyser.strong_lens_system_superclass import StrongLensSystem
 
 
 class TestStrongLensSystem(object):
@@ -16,7 +16,7 @@ class TestStrongLensSystem(object):
     def setup(self):
         #prepare unit test. Load data etc
         print("setting up " + __name__)
-        self.system_base = StrongLensSystemData('RXJ1131-1231')#, '11:31:51.6', '-12:31:57')
+        self.system_base = StrongLensSystem('RXJ1131-1231')#, '11:31:51.6', '-12:31:57')
         self.system_base.add_info_attribute('ra_str','11:31:51.6')#, , '-12:31:57')
         self.system_base.add_info_attribute('dec_str','-12:31:57')#, , '-12:31:57')
 
@@ -29,7 +29,7 @@ class TestStrongLensSystem(object):
         name = 'RXJ1131-1231'
         ra = '11:31:51.6'
         dec = '-12:31:57'
-        system1 = StrongLensSystemData(name)#, ra, dec)
+        system1 = StrongLensSystem(name)#, ra, dec)
         assert system1.name == name
         # assert system1.ra == 11.531000000000006
         # assert system1.dec == -12.5325
