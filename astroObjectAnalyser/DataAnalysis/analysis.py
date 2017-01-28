@@ -4,8 +4,8 @@ import numpy as np
 import scipy.ndimage.interpolation as interp
 #import matplotlib.pyplot as plt
 
-from lenstronomy.DataAnalysis.psf_fitting import Fitting
-import lenstronomy.util as util
+from astroObjectAnalyser.DataAnalysis.psf_fitting import Fitting
+import astrofunc.util as util
 from lenstronomy.FunctionSet.moffat import Moffat
 from lenstronomy.FunctionSet.gaussian import Gaussian
 
@@ -144,7 +144,6 @@ class Analysis(object):
                 list.append(cutout)
         return list
 
-
     def get_psf(self, image, cat, mean, rms, poisson, psf_type = 'moffat', restrict_psf = None):
         """
         fit a given psf model
@@ -221,7 +220,6 @@ class Analysis(object):
         new[combined >= max_pix/10**6] = p
         kernel = util.kernel_norm(new)
         return kernel, mean_list_select, restrict_psf, shifteds
-
 
     def add_criteria(self, star_list, mean_list, mean, rms, exp_time):
         """

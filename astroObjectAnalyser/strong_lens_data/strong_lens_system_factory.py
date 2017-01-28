@@ -1,15 +1,9 @@
 
 __author__ = 'sibirrer'
 
-# from astropy.coordinates import ICRS
-# import os
-# import configparser
 from strong_lens_system import StrongLensSystemData
-from strong_lens_image_data import StrongLensImageData
 from astroObjectAnalyser.strong_lens_data.data_manager import DataManager
 import os
-import pickle
-# import glob
 
 
 class StrongLensSystemFactory(object):
@@ -106,7 +100,7 @@ class StrongLensSystemFactory(object):
             data_list = self.create_from_pickle()
         else:
             data_list = self.create_from_central()
-        for i in range(0,len(data_list)):
+        for i in range(0, len(data_list)):
             if data_list[i].name == system_name:
                 return data_list[i]
         raise ValueError('\s is not in the list of systems on the central repository' %(system_name))

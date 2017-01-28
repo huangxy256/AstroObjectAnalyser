@@ -50,13 +50,13 @@ class StrongLensSystem(object):
 
         if attrname == 'sys_type':
             types = ['double', 'fold', 'cusp','ring','cross']
-            assert info_data in types,'system type (%s) not in supported, please pick one of: %s' %(attrname,types)
+            assert info_data in types,'system type (%s) not in supported, please pick one of: %s' % (attrname, types)
 
-        if (replace) or (not hasattr(self, attrname)):
+        if replace or (not hasattr(self, attrname)):
             setattr(self, attrname, info_data)
         # elif not hasattr(self,'num_images'):
         #     setattr(self,attrname, info_data)
-        elif not getattr(self,attrname) == info_data:
+        elif not getattr(self, attrname) == info_data:
             raise TypeError("The number of images is already set to %f" %getattr(self, attrname))
 
         if attrname in ['ra_str','dec_str']:
@@ -68,13 +68,10 @@ class StrongLensSystem(object):
 
     def is_in_survey(self, survey_name):
         """
-        returns True of False specifying whether the systems is in the survey requested.
+
+        :param survey_name: survey name ATTENTION: only survey names accepted as implemented in astrofunc package
+        :return: bool, True or False specifying whether the systems is in the survey requested.
         """
-        #surveys = ['DES','DES_SV','VLT']
-        surveys = ['DES']
-
-        assert survey_name in surveys,'Survey requested (%s) not in database, please pick one of: %s' %(survey_name,surveys)
-
         checkFootprint = CheckFootprint()
         return checkFootprint.check_footprint(self.ra, self.dec, surveyname=survey_name)
 

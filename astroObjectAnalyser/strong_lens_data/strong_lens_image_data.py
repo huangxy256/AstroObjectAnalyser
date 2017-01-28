@@ -7,13 +7,13 @@ import astropy.wcs as pywcs
 import astropy.coordinates as coords
 import numpy as np
 import os
-from astroObjectAnalyser.strong_lens_data.data_manager import DataManager
 import astrofunc.util as util
 from astrofunc.util import Util_class
 
 
-#internal modules
 
+#internal modules
+from astroObjectAnalyser.DataAnalysis.analysis import Analysis
 
 
 class StrongLensImageData(object):
@@ -21,40 +21,31 @@ class StrongLensImageData(object):
     contains all the information associated with a given band image (e.g.  r-band frame of specific lens)
     """
 
-    def __init__(self, fits_filename, folder, ra=None, dec=None, ra_cutout_cent=None, dec_cutout_cent=None,
-                 data_manager=None,
-                 cutout_filename=None, cutout_scale=None, data_type='cosmos'):
+    def __init__(self, local_filename=None, local_psf_filename=None, local_wht_filename=None, ra=None, dec=None,
+                 ra_cutout_cent=None, dec_cutout_cent=None, cutout_scale=None, data_type='cosmos'):
 
         """
-
+        initialize data class with file names (absolute paths), coordinates and data type specifications
         """
-
-        #TODO can we get rid of any of these options (i.e. streamline functionality)
-        self.fits_filename = fits_filename
-        self.filename = os.path.splitext(fits_filename)[0]
-        self.folder = folder
-        self.data_loaded = False
         self.ra = ra
         self.dec = dec
         self.ra_cutout_cent = ra_cutout_cent
         self.dec_cutout_cent = dec_cutout_cent
-        self.cutout_filename = cutout_filename
         self.cutout_scale = cutout_scale
-        if data_manager is None:
-            self.data_manager = DataManager()
-        else:
-            self.data_manager = data_manager
+
+        self.local_filename = local_filename
+        self.local_psf_filename = local_psf_filename
+        self.local_wht_filename = local_wht_filename
+
+        self.analysis = Analysis()
         self.util_class = Util_class()
         self.data_type = data_type
-        if data_type == 'cosmos':
-            self.wht_filename = self.fits_filename[:-3] + 'wht'
-        else:
-            self.wht_filename = self.fits_filename[:-8] + 'wht.fits'
+
 
     @property
     def data_cutout(self):
         if not hasattr(self, '_data_cutout'):
-            self.image_cutout(self.ra_cutout_cent, self.dec_cutout_cent, self.cutout_scale, self.cutout_filename)
+            self.image_cutout(self.ra_cutout_cent, self.dec_cutout_cent, self.cutout_scale)
         return self._data_cutout
 
     def del_cutout(self):
@@ -68,7 +59,7 @@ class StrongLensImageData(object):
     def header_cutout(self):
         if not hasattr(self, '_header_cutout'):
             print('WARINING: New cutout image is built with default number of pixels.')
-            self.image_cutout(self.ra_cutout_cent, self.dec_cutout_cent, self.cutout_scale, self.cutout_filename)
+            self.image_cutout(self.ra_cutout_cent, self.dec_cutout_cent, self.cutout_scale)
         return self._header_cutout
 
     @property
@@ -116,7 +107,7 @@ class StrongLensImageData(object):
     @property
     def exposure_map(self):
         if not hasattr(self, '_exposure_map'):
-            self.image_cutout(self.ra_cutout_cent, self.dec_cutout_cent, self.cutout_scale, self.cutout_filename, exposure_map=True)
+            self.image_cutout(self.ra_cutout_cent, self.dec_cutout_cent, self.cutout_scale, exposure_map=True)
         return self._exposure_map
 
     @property
@@ -141,7 +132,7 @@ class StrongLensImageData(object):
             self._psf_data = self._get_psf_data()
         return self._psf_data
 
-    def psf_fit(self, psf_type, filter_object=None):
+    def psf_fit(self, psf_type):
         private = '_' + psf_type
         if not hasattr(self, private):
             _, psf_variables = self._get_psf(psf_type)
@@ -151,7 +142,7 @@ class StrongLensImageData(object):
     @property
     def psf_kernel(self):
         if not hasattr(self, '_psf_kernel'):
-            kernel, psf_variables = self._get_psf(psf_type = 'moffat')
+            kernel, psf_variables = self._get_psf(psf_type='moffat')
             self._psf_kernel = kernel
             if not hasattr(self, '_moffat'):
                 self._moffat = psf_variables
@@ -167,7 +158,7 @@ class StrongLensImageData(object):
     @property
     def get_cutout_coords(self):
         if not hasattr(self, '_ra_coords_cutout') or not hasattr(self, '_dec_coords_cutout'):
-            self.image_cutout(self.ra_cutout_cent, self.dec_cutout_cent, self.cutout_scale, self.cutout_filename)
+            self.image_cutout(self.ra_cutout_cent, self.dec_cutout_cent, self.cutout_scale)
         return self._ra_coords_cutout, self._dec_coords_cutout
 
     @property
@@ -178,23 +169,20 @@ class StrongLensImageData(object):
 
     def get_subgrid(self, subgrid_res=2):
         if not hasattr(self, '_ra_coords_cutout') or not hasattr(self, '_dec_coords_cutout'):
-            self.image_cutout(self.ra_cutout_cent, self.dec_cutout_cent, self.cutout_scale, self.cutout_filename)
+            self.image_cutout(self.ra_cutout_cent, self.dec_cutout_cent, self.cutout_scale)
         cos_dec = np.cos(self.dec / 360 * 2 * np.pi)
         print('test', cos_dec)
         ra_coords_sub, dec_coord_sub = self.util_class.make_subgrid(self._ra_coords_cutout*cos_dec, self._dec_coords_cutout, subgrid_res)
 
         return ra_coords_sub, dec_coord_sub
 
-
     def _get_background(self):
         """
 
         :return: mean and rms value of background
         """
-        from lenstronomy.DataAnalysis.analysis import Analysis
-        analysis = Analysis()
         HDUFile, _ = self.get_HDUFile()
-        mean, rms = analysis.get_background(HDUFile)
+        mean, rms = self.analysis.get_background(HDUFile)
         return mean, rms
 
     def _get_cat(self):
@@ -202,10 +190,8 @@ class StrongLensImageData(object):
 
         :return: sextractor catalogue
         """
-        from lenstronomy.DataAnalysis.analysis import Analysis
-        analysis = Analysis()
         HDUFile, image_no_boarder = self.get_HDUFile()
-        cat = analysis.get_source_cat(HDUFile)
+        cat = self.analysis.get_source_cat(HDUFile)
         return cat
 
     def _get_psf(self, psf_type):
@@ -214,13 +200,11 @@ class StrongLensImageData(object):
         :param psf_type:
         :return:
         """
-        from lenstronomy.DataAnalysis.analysis import Analysis
-        analysis = Analysis()
         exp_time = self.exposure_time
         HDUFile, image_no_boarder = self.get_HDUFile()
-        mean, rms = analysis.get_background(HDUFile)
-        cat = analysis.get_source_cat(HDUFile)
-        kernel, mean_list, filter_object = analysis.get_psf(image_no_boarder, cat, mean, rms, exp_time, psf_type)
+        mean, rms = self.analysis.get_background(HDUFile)
+        cat = self.analysis.get_source_cat(HDUFile)
+        kernel, mean_list, filter_object = self.analysis.get_psf(image_no_boarder, cat, mean, rms, exp_time, psf_type)
         return kernel, mean_list
 
     def get_HDUFile(self, force=False):
@@ -238,33 +222,12 @@ class StrongLensImageData(object):
         loads in psf data stored in Tiny_Tim folder of the lens system
         :return:
         """
-        self.load_data()
         return pyfits.getdata(self.local_psf_filename)
-
-    def load_data(self):
-        """
-
-        :return:
-        """
-        #TODO load data using darkskysync
-        if not hasattr(self, 'local_filename'):
-            self.local_filename = self.data_manager.load_central_image_data(self.folder, self.fits_filename, force=False, data_type=self.data_type)
-            try:
-                self.local_wht_filename = self.data_manager.load_central_image_data(self.folder, self.wht_filename, force=False, data_type=self.data_type)
-            except:
-                pass
-            #try:
-            print(self.folder, self.filename, 'folder, filename')
-            self.local_psf_filename = self.data_manager.load_central_psf_data(self.folder, self.filename, force=False)
-            #except:
-            #    pass
 
     def header_info(self):
         """
         reads in the header info and performs checks on whether the header has the right format to deal with
         """
-        self.load_data()
-
         self._header_primary = pyfits.getheader(self.local_filename) # this is the primary header which does not contain general information
         file = pyfits.open(self.local_filename)
         if self.data_type == 'DES' or self.data_type == 'cosmos':
@@ -277,8 +240,6 @@ class StrongLensImageData(object):
         """
         returns the pixel scale of the image (units still unclear!!!)
         """
-        self.load_data()
-
         if not hasattr(self,'header'):
             self.header_info()
 
@@ -291,7 +252,6 @@ class StrongLensImageData(object):
         """
         initializes the the matrix which transforms pixel to ra/dec
         """
-        self.load_data()
         if not hasattr(self, 'header'):
             self.header_info()
 
@@ -299,7 +259,6 @@ class StrongLensImageData(object):
         CD1_2 = self.header.get('CD1_2')*3600
         CD2_1 = self.header.get('CD2_1')*3600
         CD2_2 = self.header.get('CD2_2')*3600
-
 
         self._pix2coord_transform = np.array([[CD1_1, CD1_2], [CD2_1, CD2_2]])
         det = CD1_1*CD2_2 - CD1_2*CD2_1
@@ -309,8 +268,6 @@ class StrongLensImageData(object):
         """
         reads in number of pixel per axis for original image
         """
-        self.load_data()
-
         if self.header['NAXIS'] > 2:
             raise TypeError("Too many (%i) dimensions!" % self.header['NAXIS'])
         self._naxis1 = self.header['NAXIS1']
@@ -320,7 +277,6 @@ class StrongLensImageData(object):
         """
         array of one full band, do only use this function when really needed as images can be quite large
         """
-        self.load_data()
         file = pyfits.open(self.local_filename)
         if self.data_type == 'cosmos' or self.data_type == 'DES':
             data_full = file[0].data
@@ -333,8 +289,6 @@ class StrongLensImageData(object):
         """
         array of one full band exposure time. do only use this function when really needed as images can be quite large
         """
-        self.load_data()
-
         if self.data_type == 'cosmos':
             file = pyfits.open(self.local_wht_filename)
             exp_full = file[0].data
@@ -355,8 +309,6 @@ class StrongLensImageData(object):
         """
         # if not hasattr(self,'header'):
         #     self.header_info()
-        self.load_data()
-
         if isinstance(cutout_filename, str):
             file = pyfits.open(cutout_filename)
             if self.data_type == 'cosmos' or self.data_type == 'DES':
@@ -371,9 +323,10 @@ class StrongLensImageData(object):
                 cutout_scale = 50
                 print("New cutout is generated with default cutout scale.")
             xw, yw = cutout_scale, cutout_scale
-            self._data_cutout, self._header_cutout, exp_map, self._ra_coords_cutout, self._dec_coords_cutout = self._cutout(self.local_filename, xc, yc, xw, yw, exposure_map=exposure_map)
-        if exposure_map:
-            self._exposure_map = exp_map
+            self._data_cutout, self._header_cutout, exp_map, self._ra_coords_cutout, self._dec_coords_cutout =\
+                self._cutout(self.local_filename, xc, yc, xw, yw, exposure_map=exposure_map)
+            if exposure_map:
+                self._exposure_map = exp_map
         pass
 
     def _cutout(self, fits_filename, xc, yc, xw, yw, units='pixels',

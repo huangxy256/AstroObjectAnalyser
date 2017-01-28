@@ -7,10 +7,8 @@ Tests for `StrongLensRep` module.
 from __future__ import print_function, division, absolute_import, unicode_literals
 
 import pytest
-# from StrongLensRep.strong_lens_data import StrongLensSystem
 import os
 from astroObjectAnalyser.strong_lens_data.strong_lens_system import StrongLensSystemData
-# from StrongLensRep.strong_lens_system_superclass import StrongLensSystem
 
 
 class TestStrongLensSystem(object):
@@ -64,24 +62,6 @@ class TestStrongLensSystem(object):
         assert system.dec_str == '-12:31:57'
         assert system.ra == 172.96499999999997
         assert system.dec == -12.5325
-
-    # def test_add_image_data(self):
-    #     # fits_filename = 'RXJ1131_1231_74010_drz.fits'
-    #     system = self.system_base
-    #     system.add_image_data(self.fits_filename,attrname=None)
-    #     assert hasattr(system, 'image_band')
-
-
-
-    def test_is_in_survey(self):
-        system = self.system_base
-        #assert system.is_in_survey() == False
-        # system.ra = **
-        # system.dec = **
-        #assert system.is_in_survey() == True
-
-        pass
-
 
     def teardown(self):
         #tidy up

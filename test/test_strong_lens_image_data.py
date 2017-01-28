@@ -4,8 +4,6 @@ __author__ = 'sibirrer'
 Tests for `StrongLensImageData` module.
 """
 
-
-
 from astroObjectAnalyser.strong_lens_data.strong_lens_image_data import StrongLensImageData
 import astrofunc.util as util
 
@@ -13,24 +11,19 @@ import os
 import pytest
 import numpy as np
 import numpy.testing as npt
-from mock import patch
-from test import IMAGE_DATA_PATH
+
 
 class TestStrongLensImageData(object):
 
-    @patch("darkskysync.DarkSkySync", autospec=False)
-    def setup(self, dss_mock):
-        
-        print("setting up " + __name__)
-        dss_mock.load_central_image_data.side_effect = [IMAGE_DATA_PATH]
-
-        self.fits_filename = 'RXJ1131_1231_test.fits'
+    def setup(self):
+        local_path = os.getcwd()
+        fits_path = 'test/Test_data/RXJ1131_1231_test.fits'
+        self.fits_filename = os.path.join(local_path, fits_path)
         self.name = 'RXJ1131-1231'
-        self.ra_cutout_cent = 172.96421#274.40179 #in degree ICRS coordinates
-        self.dec_cutout_cent = -12.533066#45.881676 #in degree ICRS coordinates
-        self.system1 = StrongLensImageData(self.fits_filename, self.name, self.ra_cutout_cent, self.dec_cutout_cent,
-                                self.ra_cutout_cent, self.dec_cutout_cent
-                              ,data_manager=dss_mock, cutout_filename=None, cutout_scale=None)
+        self.ra = 172.96421  # in degree ICRS coordinates
+        self.dec = -12.533066  # in degree ICRS coordinates
+        self.system1 = StrongLensImageData(local_filename=self.fits_filename, ra=self.ra, dec=self.dec,
+                                           ra_cutout_cent=self.ra, dec_cutout_cent=self.dec,  cutout_scale=None)
         self.system1.data_type = 'HST'
         #prepare unit test. Load data etc
         # filename = 'Test_data/RXJ1131_1231_test.fits'
@@ -39,8 +32,6 @@ class TestStrongLensImageData(object):
         # cutout_filename = None
         # cutout_scale = None
         # self.system1 = StrongLensImageData(self.fits_filename,self.ra_cutout_cent,self.dec_cutout_cent, cutout_filename, cutout_scale)
-
-
         pass
 
     def test_init(self):
@@ -61,7 +52,7 @@ class TestStrongLensImageData(object):
         """
         xw = 50  # number of pixel to be cutout in x-axis
         yw = 50  # number of pixel to be cutout in y-axis
-        img, head, exp_map, ra_coords, dec_coords = self.system1._cutout(self.fits_filename, self.ra_cutout_cent, self.dec_cutout_cent, xw, yw)
+        img, head, exp_map, ra_coords, dec_coords = self.system1._cutout(self.fits_filename, self.ra, self.dec, xw, yw)
         ra_coords = util.array2image(ra_coords)
         dec_coords = util.array2image(dec_coords)
         assert head['NAXIS1'] == 2*xw
@@ -77,6 +68,7 @@ class TestStrongLensImageData(object):
         """
         no testing of this routine
         """
+        pass
 
     def test_make_sugrid(self):
         ra_sub, dec_sub = self.system1.get_subgrid(subgrid_res=2)
@@ -88,7 +80,6 @@ class TestStrongLensImageData(object):
         assert ra[0][0] == ra_resized[0][0]
         assert ra[9][7] == ra_resized[9][7]
 
-
     def test_image_cutout(self):
         """
         test routine when providing the cutout image already
@@ -96,7 +87,7 @@ class TestStrongLensImageData(object):
         filename = 'Test_data/RXJ1131_1231_74010_cutout.fits'
         path = os.path.dirname(__file__)
         cutout_filename = os.path.join(path, filename)
-        self.system1.image_cutout(self.ra_cutout_cent, self.dec_cutout_cent, cutout_scale=50, cutout_filename=cutout_filename)
+        self.system1.image_cutout(self.ra, self.dec, cutout_scale=50, cutout_filename=cutout_filename)
         assert self.system1.header_cutout['NAXIS1'] == 348
         assert self.system1.header_cutout['NAXIS2'] == 349
         assert abs(self.system1.data_cutout[153, 173] - 1.1558878) < 0.0001
