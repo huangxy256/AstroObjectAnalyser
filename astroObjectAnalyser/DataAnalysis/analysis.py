@@ -2,12 +2,12 @@ __author__ = 'sibirrer'
 
 import numpy as np
 import scipy.ndimage.interpolation as interp
-#import matplotlib.pyplot as plt
+
+import astrofunc.util as util
+from astrofunc.LightProfiles.moffat import Moffat
+from astrofunc.LensingProfiles.gaussian import Gaussian
 
 from astroObjectAnalyser.DataAnalysis.psf_fitting import Fitting
-import astrofunc.util as util
-from lenstronomy.FunctionSet.moffat import Moffat
-from lenstronomy.FunctionSet.gaussian import Gaussian
 
 
 class Analysis(object):
