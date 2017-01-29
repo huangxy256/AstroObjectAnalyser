@@ -18,12 +18,12 @@ class StrongLensSystemFactory(object):
         self.data_manager = DataManager(image_dir=image_dir)
         pass
 
-    def create_from_sysdata(self,input_data,datatype='sysdata_file'):
+    def create_from_sysdata(self, input_data, datatype='sysdata_file'):
         """
         creates a list of instance of StrongLensCatalogData from simple text files using configparser
         """
 
-        data_list = self.data_manager.get_data(input_data, datatype='sysdata_file')
+        data_list = self.data_manager.get_data(input_data, datatype=datatype)
         lens_system_list = self.create_from_namedtuple(data_list)
         return lens_system_list
 
@@ -37,24 +37,12 @@ class StrongLensSystemFactory(object):
         data_list = self.data_manager.get_data_central()
         return self.create_from_namedtuple(data_list)
 
-    def create_from_pickle(self):
-        """
-        loads the lens system list from pickle file
-        :return:
-        """
-        lens_system_list = self.data_manager.get_pickle()
-        return lens_system_list
-
-    def update_pickle(self, lens_system):
-        """
-        updates the pickle file
-        :return:
-        """
-        # TODO make sure the file gets also updated locally
-        self.data_manager.update_pickle(lens_system)
-        print('lens system list updated')
-
     def create_from_namedtuple(self, data_list):
+        """
+
+        :param data_list: list of information about all the lens systems in the database
+        :return: list of StrongLensSystem classes with all the informaiton of data_list incorporated
+        """
 
         lens_system_list = []
 
@@ -62,44 +50,21 @@ class StrongLensSystemFactory(object):
 
             lens_system = StrongLensSystem('')
             data_cat = data_list[i].data_cat
-            data_image = data_list[i].data_image
-            # print(len(data_cat))
 
             for j in range(0, len(data_cat)):
                 # print(data_cat)
                 lens_system.add_info_attribute(data_cat._fields[j], data_cat[j], replace=True)
             lens_system.convert_angel_units()
-
-            for j in range(0, len(data_image)):
-                filename = data_image[j]
-                name = os.path.splitext(filename)[0]
-                #print(name)
-                #print(data_image)
-                attrname = name
-                ra = lens_system.ra
-                dec = lens_system.dec
-
-                lens_system.add_image_data_init(filename, attrname, ra=ra, dec=dec, ra_cutout_cent=ra, dec_cutout_cent=dec,
-                                           data_manager=self.data_manager,
-                                           cutout_filename=None, cutout_scale=None)
-
-            # print('Adam test: %s' %lens_system.name)
-
             lens_system_list.append(lens_system)
-            #TODO don't forget to write unit tests
-
         return lens_system_list
 
-    def find_from_central(self, system_name, pickle=False):
+    def find_from_central(self, system_name):
         """
 
         :param system_name: name of the strong lens system
         :return: class StrongLensSystem of system_name
         """
-        if pickle==True:
-            data_list = self.create_from_pickle()
-        else:
-            data_list = self.create_from_central()
+        data_list = self.create_from_central()
         for i in range(0, len(data_list)):
             if data_list[i].name == system_name:
                 return data_list[i]

@@ -32,15 +32,12 @@ class TestDataManager(object):
         assert len(data_list) == 2
         RXJ1131 = data_list[0]
         assert len(RXJ1131.data_cat) == 6
-        assert len(RXJ1131.data_image) == 1
-
         assert RXJ1131.data_cat.name == 'RXJ1131-1231'
         assert RXJ1131.data_cat.ra_str == '11:31:51.4'
         assert RXJ1131.data_cat.dec_str == '-12:31:59'
         assert RXJ1131.data_cat.radius_est == '1.7'
         assert RXJ1131.data_cat.z_source == '0.658'
         assert RXJ1131.data_cat.z_lens == '0.295'
-        assert RXJ1131.data_image.r_band == 'name_of_fits_file.fits'
 
     # def test_manage_fitsdata(self):
     #     local_file = self.datamanager.manage_fitsdata(self.fits_example)

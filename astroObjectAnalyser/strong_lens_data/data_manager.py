@@ -25,7 +25,7 @@ class DataManager(object):
 
     def __init__(self, image_dir=None):
 
-        self.lens_system_data = namedtuple('strong_lens_system', 'data_cat data_image')
+        self.lens_system_data = namedtuple('strong_lens_system', 'data_cat')
         # if central_data_dir is None:
         self.dssync = DarkSkySync()
         self.dark_sky_data_dir = 'Strong_lensing/Lenstronomy_data/'
@@ -34,24 +34,17 @@ class DataManager(object):
             self.dark_sky_image_dir = os.path.join(self.dark_sky_data_dir, 'image_data')
         else:
             self.dark_sky_image_dir = image_dir
-        self.dark_sky_pickle_file = os.path.join(self.dark_sky_data_dir, 'central_pickle.pickle')
         self.dark_sky_fits_file = os.path.join(self.dark_sky_data_dir, 'strong_lens_systems.fits')
 
         self.central_data_dir = os.path.join('/Volumes/astro/refreg/data', self.dark_sky_data_dir)
         self.central_image_dir = os.path.join(self.central_data_dir, 'image_data')
         self.central_archive = os.path.join(self.central_data_dir,'archive')
-        # self.central_pickle_file= os.path.join(self.central_data_dir,'central_pickle.pickle')
-        # print(self.central_data_dir,'central_data_dir')
-        # else:
-        #     self.central_data_dir = central_data_dir
 
-        # self.central_filename = 'strong_lens_systems.pickle'
+    def get_data(self, inputname, datatype='sysdata_file'):
 
-    def get_data(self,inputname,datatype='sysdata_file'):
+        datatype_list = ['sysdata_file', 'fits']
 
-        datatype_list = ['sysdata_file','fits']
-
-        assert datatype in datatype_list,'%s cannot be used. Supported names are: %s'%(datatype_list,datatype)
+        assert datatype in datatype_list,'%s cannot be used. Supported names are: %s' % (datatype_list, datatype)
         if datatype == 'sysdata_file':
             data = self._from_sysdata_files(inputname)
         elif datatype == 'fits':
@@ -61,44 +54,15 @@ class DataManager(object):
         return data
 
     def get_data_central(self):
+        """
+        access central strong_lens_system.fits file and reads it out
+        :return:
+        """
 
         filename = self.dssync.load(self.dark_sky_fits_file, force=True)[0]
         data = self._from_fits(filename)
-        for i in range(0, len(data)):
-            temp_filelist = self.dssync.avail(os.path.join(self.dark_sky_image_dir, data[i].data_cat.name))
-            # print(temp_filelist)
-            # print(data[i].data_cat)
-            # print(data[i].data_image)
-            # print(data.data_image)
-            # data[i].data_image = 'temp'
-            data[i].data_image.extend(temp_filelist)
         #TODO test this
         return data
-
-    def get_pickle(self):
-        """
-        loads pickle file with lens system classes
-        :return:
-        """
-        print(self.dark_sky_pickle_file)
-        return pickle.load(self.dark_sky_pickle_file)
-
-    def update_pickle(self, lens_system):
-        """
-        updates central pickle file
-        :param lens_system:
-        :return:
-        """
-        system_name = lens_system.name
-        data_list = self.get_pickle()
-        for i in range(0,len(data_list)):
-            if data_list[i].name == system_name:
-                data_list[i] = lens_system
-                pickle.dump(data_list, self.dark_sky_pickle_file)
-                return 0
-        data_list.append(lens_system)
-        pickle.dump(data_list, self.dark_sky_pickle_file)
-        raise(Warning, 'new lens system added to  %s '%self.dark_sky_pickle_file)
 
     def load_central_image_data(self, folder, fits_image_name, force=False, data_type="HST"):
         if data_type == "cosmos":
@@ -116,25 +80,6 @@ class DataManager(object):
         filename = self.dssync.load(data_path, force=force)[0]
         return filename
 
-    def add_new_systems_to_central(self,tbdata):
-        """
-        should append a fits table with new lensing systems to the central fits table and mkdir
-        where the fits imaging data for each system can be stored.
-
-        :param tbdata: data entry from a fits table, e.g. coming from pyfits.get_data(file)
-        """
-
-        if not self._check_central_dir_access():
-            print('Warning: The SAN is not mounted')
-            return
-
-        #TODO make a directory for each entry
-        #TODO make sure the columns match
-        #TODO make a new fits table so that I can append the new entries
-        #TODO write the new fits table (and archive the previous one)
-
-        pass
-
     def _from_fits(self, filename):
         """
         retrieves information about strong lensing systems and returns the data in the form of a
@@ -147,8 +92,7 @@ class DataManager(object):
 
         for i in range(0, tbdata.size):
             data_cat = cat_nametuple(*tbdata[:][i])
-            data_image = []
-            data_unit = self.lens_system_data(data_cat=data_cat, data_image=data_image)
+            data_unit = self.lens_system_data(data_cat=data_cat)
             data_list.append(data_unit)
         return data_list
 
@@ -157,24 +101,6 @@ class DataManager(object):
             print('The central (SAN) directory %s is not accessible'%self.central_data_dir)
             return False
         return True
-
-    def _rd_pickle_file(self,pickle_filename):
-        fileObject = open(pickle_filename,'r')
-        lens_sys_list = pickle.load(fileObject)
-        fileObject.close()
-        return lens_sys_list
-
-    def _write_pickle_file(self,pickle_filename,lens_sys_list,safe=True):
-        #TODO needs to be tested (Not done yet)
-        if safe is True:
-            if os.path.isfile(pickle_filename):
-                archive = os.path.join(os.path.pardir(pickle_filename),'pickle_archive')
-                if not os.path.isfile(archive):
-                    os.mkdir(archive)
-                shutil.copy(pickle_filename,os.path.join(archive,'pickle_archived_'.join(self._time_string())))
-        fileObject = open(pickle_filename,'w')
-        pickle.dump(lens_sys_list,fileObject)
-        fileObject.close()
 
     def _time_string(self):
         today = datetime.date.today()
@@ -194,7 +120,7 @@ class DataManager(object):
         if len(inputname) == 1:
             if os.path.isdir(inputname[0]):
                 file_ending = '.sysdata'
-                search_string = os.path.join(inputname,'*'+file_ending)
+                search_string = os.path.join(inputname, '*'+file_ending)
                 file_list = glob.glob(search_string)
             else:
                 file_list.extend(inputname)
@@ -211,8 +137,7 @@ class DataManager(object):
             data_dict = systemdata._sections
             print(data_dict, "data_dict")
             data_cat = util.dictionary_to_namedtuple(data_dict['catalog_data'])
-            data_image = util.dictionary_to_namedtuple(data_dict['image_data'])
-            data_unit = self.lens_system_data(data_cat=data_cat, data_image=data_image)
+            data_unit = self.lens_system_data(data_cat=data_cat)
             data_list.append(data_unit)
 
         return data_list

@@ -310,22 +310,38 @@ class StrongLensSystem(object):
         """
 
         :param attrname: image file name
-        :return: point spread function
+        :return: point spread function as a 2x2 kernel (as a fit from nearby stars)
         """
-        image_data_obj = getattr(self,attrname)
+        image_data_obj = getattr(self, attrname)
         return image_data_obj.psf_kernel
 
     def get_psf_fit(self, attrname, psf_type):
-        image_data_obj = getattr(self,attrname)
+        """
+        fits a parameterized model to stars nearby
+        :param attrname:
+        :param psf_type: fitting function (Moffat or Gaussian implemented)
+        :return: fitting parameters
+        """
+        image_data_obj = getattr(self, attrname)
         return image_data_obj.psf_fit(psf_type)
 
-    def get_background(self, attrname):
-        image_data_obj = getattr(self,attrname)
-        return image_data_obj.background
-
     def get_psf_data(self, attrname):
+        """
+
+        :param attrname: image file name
+        :return: returs PSF from data file (.fits file) 2x2 kernel
+        """
         image_data_obj = getattr(self,attrname)
         return image_data_obj.get_psf_data
+
+    def get_background(self, attrname):
+        """
+
+        :param attrname: image file name
+        :return: background sigma estimate from image
+        """
+        image_data_obj = getattr(self, attrname)
+        return image_data_obj.background
 
     def get_cat(self, attrname):
         """
