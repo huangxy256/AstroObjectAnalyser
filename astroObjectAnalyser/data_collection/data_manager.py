@@ -9,8 +9,8 @@ import os
 import glob
 import astrofunc.util as util
 from collections import namedtuple
-from darkskysync.DarkSkySync import DarkSkySync
 import astropy.io.fits as pyfits
+import shutil
 
 
 class DataManager(object):
@@ -20,32 +20,71 @@ class DataManager(object):
 
     """
 
-    def __init__(self, image_dir=None):
+    def __init__(self, server_path=None, scratch_path=None, directory_path=None):
+        """
+
+        :param server_path: path to mounted server
+        :param scratch_path: path to local scratch (can be deleted, use hidden folders)
+        :param directory_path: path on server to system database
+        """
 
         self.lens_system_data = namedtuple('strong_lens_system', 'data_cat')
-        # if central_data_dir is None:
-        self.dssync = DarkSkySync()
-        self.dark_sky_data_dir = 'Strong_lensing/Lenstronomy_data/'
-        self.dark_sky_cosmos_dir = 'acs_cosmos/v2/'
-        if image_dir is None:
-            self.dark_sky_image_dir = os.path.join(self.dark_sky_data_dir, 'image_data')
-        else:
-            self.dark_sky_image_dir = image_dir
-        self.dark_sky_fits_file = os.path.join(self.dark_sky_data_dir, 'strong_lens_systems.fits')
+        self.server_path = server_path
+        self.scratch_path = scratch_path
+        self.directory_path = directory_path
+        self._dir_local = os.path.join(self.scratch_path, self.directory_path)
+        self._dir_server = os.path.join(self.server_path, self.directory_path)
 
-        self.central_data_dir = os.path.join('/Volumes/astro/refreg/data', self.dark_sky_data_dir)
-        self.central_image_dir = os.path.join(self.central_data_dir, 'image_data')
-        self.central_archive = os.path.join(self.central_data_dir,'archive')
+        self.fits_file_path = os.path.join(self.directory_path, 'strong_lens_systems.fits')
+        self._max_size = 10**9  # 1Gbyte as max file size
+
+    def _check_central_dir_access(self):
+        if not os.path.isdir(self._dir_server):
+            print('The central (SAN) directory %s is not accessible'%self._dir_server)
+            return False
+        return True
+
+    def _sync_load(self, relative_path, force=False):
+        """
+        checks the presentce of a file locally, if not, makes local copy of it from server and returns local path
+        :param relatve_path: path and name of file relative to mounted server
+        :return: local path to file (which is existing)
+        """
+        local_path = os.path.join(self.scratch_path, self.directory_path, relative_path)
+        if not os.path.isfile(local_path) or force is True:
+            self._copy2local(relative_path)
+        return local_path
+
+    def _copy2local(self, relative_path):
+        """
+        copies a file from server to the local scratch folder
+        :param relative_path: relative path on server (including file name)
+        :return:
+        """
+        self._check_central_dir_access()
+        remote_path = os.path.join(self.server_path, self.directory_path, relative_path)
+        if not os.path.isfile(remote_path):
+            raise ValueError("%s does not exist or is not a file!" % remote_path)
+        size = os.path.getsize(remote_path)
+        if size > self._max_size:
+            raise ValueError("The file %s  has %s bytes, which is more than the limit of %s" %
+                             (remote_path, size, self._max_size))
+        local_path = os.path.join(self.scratch_path, self.directory_path, relative_path)
+        for dirpath, dirnames, filenames in os.walk(remote_path):
+            structure = os.path.join(local_path, dirpath[len(remote_path):])
+            if not os.path.isdir(structure):
+                os.mkdir(structure)
+        shutil.copy2(remote_path, local_path)
 
     def get_data(self, inputname, datatype='sysdata_file'):
 
         datatype_list = ['sysdata_file', 'fits']
-
         assert datatype in datatype_list,'%s cannot be used. Supported names are: %s' % (datatype_list, datatype)
+        filename = self._sync_load(inputname, force=False)
         if datatype == 'sysdata_file':
-            data = self._from_sysdata_files(inputname)
+            data = self._from_sysdata_files(filename)
         elif datatype == 'fits':
-            data = self._from_fits(inputname)
+            data = self._from_fits(filename)
         else:
             raise ValueError("datatype %s not valid!" % datatype)
         return data
@@ -56,25 +95,20 @@ class DataManager(object):
         :return:
         """
 
-        filename = self.dssync.load(self.dark_sky_fits_file, force=True)[0]
+        filename = self._sync_load(self.fits_file_path, force=True)
         data = self._from_fits(filename)
-        #TODO test this
         return data
 
-    def load_central_image_data(self, folder, fits_image_name, force=False, data_type="HST"):
-        if data_type == "cosmos":
-            data_path = os.path.join(self.dark_sky_cosmos_dir, fits_image_name)
-            print(data_path, 'data_path image')
-        else:
-            data_path = os.path.join(self.dark_sky_image_dir, folder, fits_image_name)
-        filename = self.dssync.load(data_path, force=force)[0]
-        return filename
+    def load_central_image_data(self, folder, fits_image_name, force=False):
+        """
 
-    def load_central_psf_data(self, folder, fits_image_name, force=False):
-
-        data_path = os.path.join(self.dark_sky_image_dir, folder, 'PSF_TinyTim', fits_image_name, 'result00.fits')
-        print(data_path, 'data_path psf')
-        filename = self.dssync.load(data_path, force=force)[0]
+        :param folder: folder relative to directory_path (normally named after the system)
+        :param fits_image_name: name of the fits file
+        :param force: force a new sync
+        :return:
+        """
+        data_path = os.path.join(folder, fits_image_name)
+        filename = self._sync_load(data_path, force=force)
         return filename
 
     def _from_fits(self, filename):
@@ -92,12 +126,6 @@ class DataManager(object):
             data_unit = self.lens_system_data(data_cat=data_cat)
             data_list.append(data_unit)
         return data_list
-
-    def _check_central_dir_access(self):
-        if not os.path.isdir(self.central_data_dir):
-            print('The central (SAN) directory %s is not accessible'%self.central_data_dir)
-            return False
-        return True
 
     def _time_string(self):
         today = datetime.date.today()

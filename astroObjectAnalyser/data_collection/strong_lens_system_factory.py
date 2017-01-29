@@ -10,12 +10,12 @@ class StrongLensSystemFactory(object):
     able to create instances of StrongLensSystem in many ways (+ book keeping)
     """
 
-    def __init__(self, image_dir=None):
+    def __init__(self, server_path=None, scratch_path=None, directory_path=None):
         """
         filname of a file in a format that is readable by configparser
         """
-        self.data_manager = DataManager(image_dir=image_dir)
-        pass
+        self.data_manager = DataManager(server_path=server_path, scratch_path=scratch_path,
+                                        directory_path=directory_path)
 
     def create_from_sysdata(self, input_data, datatype='sysdata_file'):
         """

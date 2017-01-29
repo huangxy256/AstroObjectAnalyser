@@ -7,25 +7,26 @@ Tests for `lenstronomy` module.
 from __future__ import print_function, division, absolute_import
 
 import os
-
 import pytest
-from mock import patch
-from darkskysync.DataSourceFactory import DataSourceFactory
 
 from astroObjectAnalyser.data_collection.data_manager import DataManager
 
 
 class TestDataManager(object):
 
-    @patch.object(DataSourceFactory, "fromConfig", autospec=False)
-    def setup(self, dsf_object):
-        #prepare unit test. Load data etc
+    def setup(self):
+        # prepare unit test. Load data etc
+
         print("setting up " + __name__)
         test_dir = os.path.dirname(__file__)
+        self.server_path = os.path.join(test_dir, 'Test_data')
+        self.scratch_path = os.path.join(test_dir, 'Scratch_test')
+        self.name = 'RXJ1131_1231.sysdata'
         sysdata_filepath = os.path.join(test_dir, 'Test_data', 'RXJ1131_1231.sysdata')
         self.fits_example = os.path.join(test_dir, 'Test_data', 'RXJ1131_1231_74010_cutout.fits')
         self.files = [sysdata_filepath, sysdata_filepath]
-        self.datamanager = DataManager()
+        self.datamanager = DataManager(server_path=self.server_path, scratch_path=self.scratch_path,
+                                         directory_path="")
 
     def test_from_sysdata_files(self):
         data_list = self.datamanager._from_sysdata_files(self.files)
@@ -41,8 +42,8 @@ class TestDataManager(object):
 
     def test_get_data(self):
 
-        data_list = self.datamanager.get_data(self.files,datatype='sysdata_file')
-        data_list2 = self.datamanager._from_sysdata_files(self.files)
+        data_list = self.datamanager.get_data(self.name, datatype='sysdata_file')
+        data_list2 = self.datamanager._from_sysdata_files(self.files[0])
         assert data_list == data_list2
 
     def teardown(self):

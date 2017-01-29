@@ -9,30 +9,26 @@ import os
 # from lenstronomy.data_collection.data_manager import DataManager
 from astroObjectAnalyser.data_collection.strong_lens_system_factory import StrongLensSystemFactory as SLsys_fac
 from mock import patch
-from darkskysync.DataSourceFactory import DataSourceFactory
-from darkskysync.DarkSkySync import DarkSkySync
+
 
 STRONG_LENS_SYSTEMS_PATH = os.path.join(os.path.dirname(__file__), 'Test_data','strong_lens_systems.fits')
 
 class TestLenstronomy(object):
 
-    @patch.object(DataSourceFactory, "fromConfig", autospec=False)
-    @patch.object(DarkSkySync, 'load', autospec=True, side_effect="files")
-    def setup(self, dss_mock, dsf_object):
+    def setup(self):
         
         #prepare unit test. Load data etc
         print("setting up " + __name__)
-        test_dir = os.path.join(os.path.dirname(__file__ ))
-        filename = os.path.join(test_dir,'test_data','RXJ1131_1231.sysdata')
-        self.files = [filename,filename]
+        test_dir = os.path.join(os.path.dirname(__file__))
+        self.server_path = os.path.join(test_dir, 'Test_data')
+        self.scratch_path = os.path.join(test_dir, 'Scratch_test')
+        filename = os.path.join(test_dir,'test_data', 'RXJ1131_1231.sysdata')
+        self.files = [filename, filename]
         
-        dss_mock.side_effect = [[self.files]]
-        
-        self.lens_system_fac = SLsys_fac()
+        self.lens_system_fac = SLsys_fac(server_path=self.server_path, scratch_path=self.scratch_path,
+                                         directory_path="")
 
-    @patch.object(DarkSkySync, 'load', autospec=True, side_effect=[[STRONG_LENS_SYSTEMS_PATH]])
-    @patch.object(DarkSkySync, 'avail', autospec=True)
-    def test_from_sysdata_files(self, avail_mock, load_mock):
+    def test_from_sysdata_files(self):
 
         # lens_systems = self.lens_system_fac.create_from_sysdata(self.files,datatype='sysdata_file')
         lens_systems = self.lens_system_fac.create_from_central()
@@ -51,7 +47,7 @@ class TestLenstronomy(object):
 
 
     def teardown(self):
-        #tidy up
+        os.remove(os.path.join(self.scratch_path, "strong_lens_systems.fits"))
         print("tearing down " + __name__)
         pass
 
