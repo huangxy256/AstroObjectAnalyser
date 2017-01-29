@@ -7,12 +7,12 @@ import matplotlib.pyplot as plt # plotting package
 import astrofunc.util as util
 
 
-class Statistics(object):
+class ImageStatistics(object):
     """
     this class contains routines and methods to estimate the background noise of a given image
     """
 
-    def plot_pixel_histogram(self,image):
+    def plot_pixel_histogram(self, image):
         imgh = util.image2array(image)
 
         # print some statistics about the image
