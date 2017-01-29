@@ -8,7 +8,7 @@ from __future__ import print_function, division, absolute_import, unicode_litera
 
 import pytest
 import os
-from astroObjectAnalyser.strong_lens_system_superclass import StrongLensSystem
+from astroObjectAnalyser.astro_object_superclass import StrongLensSystem
 
 
 class TestStrongLensSystem(object):

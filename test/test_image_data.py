@@ -4,13 +4,14 @@ __author__ = 'sibirrer'
 Tests for `StrongLensImageData` module.
 """
 
-from astroObjectAnalyser.strong_lens_data.strong_lens_image_data import StrongLensImageData
-import astrofunc.util as util
-
 import os
-import pytest
+
+import astrofunc.util as util
 import numpy as np
 import numpy.testing as npt
+import pytest
+
+from astroObjectAnalyser.image_data import StrongLensImageData
 
 
 class TestStrongLensImageData(object):

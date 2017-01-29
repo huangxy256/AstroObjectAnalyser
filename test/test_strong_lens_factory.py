@@ -6,8 +6,8 @@ from __future__ import print_function, division, absolute_import
 
 import pytest
 import os
-# from lenstronomy.strong_lens_data.data_manager import DataManager
-from astroObjectAnalyser.strong_lens_data.strong_lens_system_factory import StrongLensSystemFactory as SLsys_fac
+# from lenstronomy.data_collection.data_manager import DataManager
+from astroObjectAnalyser.data_collection.strong_lens_system_factory import StrongLensSystemFactory as SLsys_fac
 from mock import patch
 from darkskysync.DataSourceFactory import DataSourceFactory
 from darkskysync.DarkSkySync import DarkSkySync

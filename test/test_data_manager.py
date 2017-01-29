@@ -12,7 +12,7 @@ import pytest
 from mock import patch
 from darkskysync.DataSourceFactory import DataSourceFactory
 
-from astroObjectAnalyser.strong_lens_data.data_manager import DataManager
+from astroObjectAnalyser.data_collection.data_manager import DataManager
 
 
 class TestDataManager(object):
@@ -21,7 +21,7 @@ class TestDataManager(object):
     def setup(self, dsf_object):
         #prepare unit test. Load data etc
         print("setting up " + __name__)
-        test_dir = os.path.dirname(__file__ )
+        test_dir = os.path.dirname(__file__)
         sysdata_filepath = os.path.join(test_dir, 'Test_data', 'RXJ1131_1231.sysdata')
         self.fits_example = os.path.join(test_dir, 'Test_data', 'RXJ1131_1231_74010_cutout.fits')
         self.files = [sysdata_filepath, sysdata_filepath]
@@ -38,30 +38,6 @@ class TestDataManager(object):
         assert RXJ1131.data_cat.radius_est == '1.7'
         assert RXJ1131.data_cat.z_source == '0.658'
         assert RXJ1131.data_cat.z_lens == '0.295'
-
-    # def test_manage_fitsdata(self):
-    #     local_file = self.datamanager.manage_fitsdata(self.fits_example)
-    #
-    #     assert os.path.isfile(local_file)
-    #
-
-    # def test_add_system_cental(self):
-    #     pass
-    #
-    # def test_get_central_pickle(self):
-    #     pass
-    #
-    # def test_from_clerk_table(self):
-    #     pass
-    #
-    # def test_check_central_dir_access(self):
-    #     pass
-    #
-    # def test_rd_pickle_file(self):
-    #     pass
-    #
-    # def test_write_pickle_file(self):
-    #     pass
 
     def test_get_data(self):
 

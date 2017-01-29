@@ -2,18 +2,15 @@ import datetime
 import time as time_mod
 
 
-__author__ = 'amaraa'
+__author__ = 'amaraa, sibirrer'
 
 import configparser
 import os
 import glob
 import astrofunc.util as util
 from collections import namedtuple
-import pickle
 from darkskysync.DarkSkySync import DarkSkySync
-import shutil
 import astropy.io.fits as pyfits
-import numpy as np
 
 
 class DataManager(object):

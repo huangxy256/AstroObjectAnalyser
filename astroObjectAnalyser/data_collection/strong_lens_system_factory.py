@@ -1,9 +1,8 @@
 
 __author__ = 'sibirrer'
 
-from astroObjectAnalyser.strong_lens_system_superclass import StrongLensSystem
-from astroObjectAnalyser.strong_lens_data.data_manager import DataManager
-import os
+from astroObjectAnalyser.astro_object_superclass import StrongLensSystem
+from astroObjectAnalyser.data_collection.data_manager import DataManager
 
 
 class StrongLensSystemFactory(object):

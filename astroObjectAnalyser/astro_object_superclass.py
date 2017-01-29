@@ -1,12 +1,10 @@
 __author__ = 'amaraa & sibirrer'
 
-from astropy.coordinates import ICRS, FK5, Angle
-
+import astrofunc.constants as const
 import astropy.units as u
 import numpy as np
-
 from astrofunc.Footprint.footprint import CheckFootprint
-import astrofunc.constants as const
+from astropy.coordinates import Angle
 
 
 class StrongLensSystem(object):
@@ -81,7 +79,7 @@ class StrongLensSystem(object):
         adds an image_data class to the astro data object.
         Tries to take over all possible configurations of the object class
         """
-        from astroObjectAnalyser.strong_lens_data.strong_lens_image_data import StrongLensImageData
+        from astroObjectAnalyser.image_data import StrongLensImageData
         if ra is None:
             ra = self.ra
         if dec is None:
