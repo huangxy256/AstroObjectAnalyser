@@ -35,7 +35,7 @@ class DataManager(object):
         self._dir_local = os.path.join(self.scratch_path, self.directory_path)
         self._dir_server = os.path.join(self.server_path, self.directory_path)
 
-        self.fits_file_path = os.path.join(self.directory_path, 'strong_lens_systems.fits')
+        self.fits_file_path = 'strong_lens_systems.fits'
         self._max_size = 10**9  # 1Gbyte as max file size
 
     def _check_central_dir_access(self):
@@ -70,10 +70,19 @@ class DataManager(object):
             raise ValueError("The file %s  has %s bytes, which is more than the limit of %s" %
                              (remote_path, size, self._max_size))
         local_path = os.path.join(self.scratch_path, self.directory_path, relative_path)
-        for dirpath, dirnames, filenames in os.walk(remote_path):
-            structure = os.path.join(local_path, dirpath[len(remote_path):])
-            if not os.path.isdir(structure):
-                os.mkdir(structure)
+        filepath = local_path
+        try:
+            with open(filepath) as f:
+                pass
+        except IOError as e:
+            splitlocaldir = filepath.split(os.sep)
+            splitlocaldir.remove(splitlocaldir[-1:][0])
+            localdir = ""
+            for item in splitlocaldir:
+                localdir += item + os.sep
+            if not os.path.exists(localdir):
+                os.makedirs(localdir)
+            #shutil.copyfile(sourcefile, filepath)
         shutil.copy2(remote_path, local_path)
 
     def get_data(self, inputname, datatype='sysdata_file'):
@@ -160,7 +169,6 @@ class DataManager(object):
 
             systemdata.read(filename)
             data_dict = systemdata._sections
-            print(data_dict, "data_dict")
             data_cat = util.dictionary_to_namedtuple(data_dict['catalog_data'])
             data_unit = self.lens_system_data(data_cat=data_cat)
             data_list.append(data_unit)

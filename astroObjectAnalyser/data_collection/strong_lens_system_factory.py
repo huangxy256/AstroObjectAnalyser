@@ -67,5 +67,5 @@ class StrongLensSystemFactory(object):
         for i in range(0, len(data_list)):
             if data_list[i].name == system_name:
                 return data_list[i]
-        raise ValueError('\s is not in the list of systems on the central repository' %(system_name))
+        raise ValueError('%s is not in the list of systems on the central repository' %(system_name))
 
