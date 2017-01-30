@@ -230,7 +230,7 @@ class StrongLensImageData(object):
         """
         self._header_primary = pyfits.getheader(self.local_filename) # this is the primary header which does not contain general information
         file = pyfits.open(self.local_filename)
-        if self.data_type == 'DES' or self.data_type == 'cosmos':
+        if self.data_type == 'DES' or self.data_type == 'cosmos' or self.data_type == "HST_new":
             self._header = file[0].header
         else:
             self._header = file['SCI'].header  # this is the header of the science image
@@ -278,10 +278,12 @@ class StrongLensImageData(object):
         array of one full band, do only use this function when really needed as images can be quite large
         """
         file = pyfits.open(self.local_filename)
-        if self.data_type == 'cosmos' or self.data_type == 'DES':
+        if self.data_type == 'cosmos' or self.data_type == 'DES' or self.data_type == "HST_new":
             data_full = file[0].data
-        else:
+        elif self.data_type == "HST":
             data_full = file['SCI'].data
+        else:
+            data_full = file[0].data
         file.close()
         return data_full
 
@@ -289,7 +291,7 @@ class StrongLensImageData(object):
         """
         array of one full band exposure time. do only use this function when really needed as images can be quite large
         """
-        if self.data_type == 'cosmos':
+        if self.data_type == 'cosmos' or self.data_type == "HST_new":
             file = pyfits.open(self.local_wht_filename)
             exp_full = file[0].data
             print("separate exposure map loaded")
@@ -322,7 +324,7 @@ class StrongLensImageData(object):
             if cutout_scale is None:
                 cutout_scale = 50
                 print("New cutout is generated with default cutout scale.")
-            xw, yw = cutout_scale, cutout_scale
+            xw, yw = int(cutout_scale/2), int(cutout_scale/2)
             self._data_cutout, self._header_cutout, exp_map, self._ra_coords_cutout, self._dec_coords_cutout =\
                 self._cutout(self.local_filename, xc, yc, xw, yw, exposure_map=exposure_map)
             if exposure_map:
