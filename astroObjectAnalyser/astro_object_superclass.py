@@ -1,6 +1,7 @@
 __author__ = 'amaraa & sibirrer'
 
 import astrofunc.constants as const
+from astrofunc.util import Util_class
 import astropy.units as u
 import numpy as np
 from astrofunc.Footprint.footprint import CheckFootprint
@@ -25,6 +26,7 @@ class StrongLensSystem(object):
         self.name = name
         self.tile_name = name
         self.available_frames = []
+        self.util_class = Util_class()
 
 
     def add_info_attribute(self, attrname, info_data, replace=False):
@@ -277,6 +279,30 @@ class StrongLensSystem(object):
         else:
             raise ValueError('Strong Lens system does not provide image positions')
 
+    def pix2coord(self, attrname, x_pix, y_pix):
+        """
+
+        :param attrname:
+        :param x_pix:
+        :param y_pix:
+        :return: relative ra, dec for pixel coordinate (arc seconds)
+        """
+        image_data_obj = getattr(self, attrname)
+        ra, dec = image_data_obj.map_pix2coord(x_pix, y_pix)
+        return ra, dec
+
+    def coord2pix(self, attrname, ra, dec):
+        """
+
+        :param attrname:
+        :param ra:
+        :param dec:
+        :return: pixel coordinate of realtive ra, dec coordinate (arc seconds)
+        """
+        image_data_obj = getattr(self, attrname)
+        x_pix, y_pix = image_data_obj.map_coord2pix(ra, dec)
+        return x_pix, y_pix
+
     def get_exposure_time(self, attrname):
         """
 
@@ -304,14 +330,14 @@ class StrongLensSystem(object):
         image_data_obj = getattr(self,attrname)
         return image_data_obj.CCD_gain
 
-    def get_psf_kernel(self, attrname):
+    def get_psf_kernel_image(self, attrname, kernel_size):
         """
 
         :param attrname: image file name
-        :return: point spread function as a 2x2 kernel (as a fit from nearby stars)
+        :return: point spread function as a 2x2 kernel (as a fit from nearby stars in the same image)
         """
         image_data_obj = getattr(self, attrname)
-        return image_data_obj.psf_kernel
+        return image_data_obj.psf_kernel(kernel_size)
 
     def get_psf_fit(self, attrname, psf_type):
         """
@@ -323,14 +349,15 @@ class StrongLensSystem(object):
         image_data_obj = getattr(self, attrname)
         return image_data_obj.psf_fit(psf_type)
 
-    def get_psf_data(self, attrname):
+    def get_psf_from_file(self, attrname, kernelsize):
         """
 
         :param attrname: image file name
         :return: returs PSF from data file (.fits file) 2x2 kernel
         """
-        image_data_obj = getattr(self,attrname)
-        return image_data_obj.get_psf_data
+        image_data_obj = getattr(self, attrname)
+        return image_data_obj.get_psf_from_file(kernelsize)
+
 
     def get_background(self, attrname):
         """
@@ -372,6 +399,16 @@ class StrongLensSystem(object):
         """
         image_data_obj = getattr(self, attrname)
         x0, y0 = image_data_obj.get_pixel_zero_point
+        return x0, y0
+
+    def get_coord_zero_point(self, attrname):
+        """
+        get relative ra,dec coordinate of pixel image 0,0 of cutout
+        :param attrname: image file name
+        :return: ra, dec
+        """
+        image_data_obj = getattr(self, attrname)
+        x0, y0 = image_data_obj.get_coord_zero_point
         return x0, y0
 
     def get_transform_matrix_angle2pix(self, attrname):

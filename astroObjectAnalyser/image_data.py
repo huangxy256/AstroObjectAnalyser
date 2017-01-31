@@ -126,27 +126,26 @@ class StrongLensImageData(object):
             self._background_mean, self._background_rms = self._get_background()
         return self._background_mean, self._background_rms
 
-    @property
-    def get_psf_data(self):
+    def get_psf_from_file(self, kernelsize):
         if not hasattr(self, '_psf_data'):
-            self._psf_data = self._get_psf_data()
+            self._psf_data = self._get_psf_from_file(kernelsize)
         return self._psf_data
 
     def psf_fit(self, psf_type):
         private = '_' + psf_type
         if not hasattr(self, private):
-            _, psf_variables = self._get_psf(psf_type)
+            _, psf_variables = self._get_psf_fit(psf_type)
             setattr(self, private, psf_variables)
         return getattr(self, private)
 
-    @property
-    def psf_kernel(self):
+    def psf_kernel(self, kernelsize):
         if not hasattr(self, '_psf_kernel'):
-            kernel, psf_variables = self._get_psf(psf_type='moffat')
+            kernel, psf_variables = self._get_psf_fit(psf_type='moffat')
             self._psf_kernel = kernel
             if not hasattr(self, '_moffat'):
                 self._moffat = psf_variables
-        return self._psf_kernel
+        kernel = self.util_class.cut_psf(self._psf_kernel, kernelsize)
+        return kernel
 
     @property
     def get_cat(self):
@@ -194,7 +193,7 @@ class StrongLensImageData(object):
         cat = self.analysis.get_source_cat(HDUFile)
         return cat
 
-    def _get_psf(self, psf_type):
+    def _get_psf_fit(self, psf_type):
         """
 
         :param psf_type:
@@ -217,12 +216,14 @@ class StrongLensImageData(object):
             self._HDUFile, self._image_no_border = ImageConfig.get_source_cat(image, conf_args)
         return self._HDUFile, self._image_no_border
 
-    def _get_psf_data(self):
+    def _get_psf_from_file(self, kernelsize):
         """
         loads in psf data stored in Tiny_Tim folder of the lens system
         :return:
         """
-        return pyfits.getdata(self.local_psf_filename)
+        psf_data = pyfits.getdata(self.local_psf_filename)
+        kernel = self.util_class.cut_psf(psf_data, kernelsize)
+        return kernel
 
     def header_info(self):
         """
@@ -425,3 +426,41 @@ class StrongLensImageData(object):
         wcs = pywcs.WCS(head)
         x_0, y_0 = wcs.wcs_world2pix(self.ra, self.dec, 0)
         return x_0, y_0
+
+    @property
+    def get_coord_zero_point(self):
+        """
+
+        :return: angular coordinate (relative arc sec) (ra_0, dec_0) of (pix_x,pix_y) = (0,0)
+        """
+        head = self._header_cutout
+        wcs = pywcs.WCS(head)
+        ra_0, dec_0 = wcs.wcs_pix2world(0, 0, 0)
+        cos_dec = np.cos(self.dec / 360 * 2 * np.pi)
+        d_ra = (ra_0 - self.ra) * 3600. * cos_dec
+        d_dec = (dec_0 - self.dec) * 3600.
+        return d_ra, d_dec
+
+    def map_coord2pix(self, ra, dec):
+        """
+
+        :param ra: ra coordinates, relative
+        :param dec: dec coordinates, relative
+        :return: x, y pixel coordinates
+        """
+        x_0, y_0 = self.get_pixel_zero_point
+        _pix2coord_transform, _coord2pix_transform = self.transforms
+        x_pos, y_pos = util.map_coord2pix(ra, dec, x_0, y_0, _coord2pix_transform)
+        return x_pos, y_pos
+
+    def map_pix2coord(self, x_pos, y_pos):
+        """
+
+        :param x_pos: pixel coordinate
+        :param y_pos: pixel coordinate
+        :return: relative ra, dec coordinate
+        """
+        ra_0, dec_0 = self.get_coord_zero_point
+        _pix2coord_transform, _coord2pix_transform = self.transforms
+        ra_pos, dec_pos = util.map_coord2pix(x_pos, y_pos, ra_0, dec_0, _pix2coord_transform)
+        return ra_pos, dec_pos
