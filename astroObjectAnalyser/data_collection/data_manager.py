@@ -98,13 +98,13 @@ class DataManager(object):
             raise ValueError("datatype %s not valid!" % datatype)
         return data
 
-    def get_data_central(self):
+    def get_data_central(self, force=False):
         """
         access central strong_lens_system.fits file and reads it out
         :return:
         """
 
-        filename = self._sync_load(self.fits_file_path, force=True)
+        filename = self._sync_load(self.fits_file_path, force=force)
         data = self._from_fits(filename)
         return data
 

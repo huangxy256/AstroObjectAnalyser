@@ -374,7 +374,7 @@ class StrongLensSystem(object):
         :param attrname: image file name
         :return: SourceExtractor catalogue of image
         """
-        image_data_obj = getattr(self,attrname)
+        image_data_obj = getattr(self, attrname)
         return image_data_obj.get_cat
 
     def shift_cutout_center(self, attrname, delta_ra, delta_dec):

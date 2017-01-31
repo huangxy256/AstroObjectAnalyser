@@ -14,6 +14,7 @@ from astrofunc.util import Util_class
 
 #internal modules
 from astroObjectAnalyser.DataAnalysis.analysis import Analysis
+from astroObjectAnalyser.DataAnalysis.catalogues import Catalogue
 
 
 class StrongLensImageData(object):
@@ -37,6 +38,7 @@ class StrongLensImageData(object):
         self.local_psf_filename = local_psf_filename
         self.local_wht_filename = local_wht_filename
 
+        self.catalogue = Catalogue()
         self.analysis = Analysis()
         self.util_class = Util_class()
         self.data_type = data_type
@@ -181,7 +183,7 @@ class StrongLensImageData(object):
         :return: mean and rms value of background
         """
         HDUFile, _ = self.get_HDUFile()
-        mean, rms = self.analysis.get_background(HDUFile)
+        mean, rms = self.catalogue.get_background(HDUFile)
         return mean, rms
 
     def _get_cat(self):
@@ -190,7 +192,7 @@ class StrongLensImageData(object):
         :return: sextractor catalogue
         """
         HDUFile, image_no_boarder = self.get_HDUFile()
-        cat = self.analysis.get_source_cat(HDUFile)
+        cat = self.catalogue.get_source_cat(HDUFile)
         return cat
 
     def _get_psf_fit(self, psf_type):
@@ -201,8 +203,8 @@ class StrongLensImageData(object):
         """
         exp_time = self.exposure_time
         HDUFile, image_no_boarder = self.get_HDUFile()
-        mean, rms = self.analysis.get_background(HDUFile)
-        cat = self.analysis.get_source_cat(HDUFile)
+        mean, rms = self.catalogue.get_background(HDUFile)
+        cat = self.catalogue.get_source_cat(HDUFile)
         kernel, mean_list, filter_object = self.analysis.get_psf(image_no_boarder, cat, mean, rms, exp_time, psf_type)
         return kernel, mean_list
 
