@@ -2,9 +2,9 @@ __author__ = 'sibirrer'
 
 import numpy as np
 import scipy.ndimage.interpolation as interp
+import scipy.ndimage.filters as filters
 
 import astrofunc.util as util
-from astrofunc.LightProfiles.moffat import Moffat
 from astrofunc.LensingProfiles.gaussian import Gaussian
 
 from astroObjectAnalyser.DataAnalysis.psf_fitting import Fitting
@@ -16,7 +16,7 @@ class Analysis(Catalogue):
     class which analyses data and fits a psf
     """
 
-    def get_psf(self, image, cat, mean, rms, poisson, psf_type = 'moffat', restrict_psf=None):
+    def get_psf(self, image, cat, mean, rms, poisson, psf_type='moffat', restrict_psf=None):
         """
         fit a given psf model
         :param image: cutout image to fit a profile on
@@ -78,7 +78,7 @@ class Analysis(Catalogue):
                 print('=== object ===', i, center_x, center_y)
                 import matplotlib.pylab as plt
                 fig, ax1 = plt.subplots()
-                im=ax1.matshow(np.log10(shifted), origin='lower')
+                im = ax1.matshow(np.log10(shifted), origin='lower')
                 plt.axes(ax1)
                 fig.colorbar(im)
                 plt.show()
@@ -128,7 +128,7 @@ class Analysis(Catalogue):
             restricted_list.append(True)
         return restricted_list
 
-    def get_psf_kwargs_update(self, image_name, psf_type, psf_size=None, psf_size_large=91, filter_object=None, kwargs_cut={}):
+    def get_psf_kwargs_update(self, psf_type, image, exp_time, HDUFile, pixelScale, psf_size=None, psf_size_large=91, filter_object=None, kwargs_cut={}):
         """
         does the same as get_psf_kwargs but can also restrict itself to specially chosen objects
         :param image_name:
@@ -137,17 +137,14 @@ class Analysis(Catalogue):
         :param filter_object:
         :return:
         """
-        exp_time = self.system.get_exposure_time(image_name)
-        HDUFile, image_no_border = self.system.get_HDUFile(image_name)
-
-        kernel_large, mean_list, restrict_psf, star_list = self.analysis.get_psf_outside(HDUFile, image_no_border, exp_time, psf_type, filter_object, kwargs_cut)
+        kernel_large, mean_list, restrict_psf, star_list = self.get_psf_outside(HDUFile, image, exp_time, psf_type, filter_object, kwargs_cut)
         if psf_type == 'gaussian':
-            sigma = mean_list[1]*self.system.get_pixel_scale(image_name)
+            sigma = mean_list[1]*pixelScale
             psf_kwargs = {'psf_type': psf_type, 'sigma': sigma}
         elif psf_type == 'moffat':
             alpha = mean_list[1]
             beta = mean_list[2]
-            alpha *= self.system.get_pixel_scale(image_name)
+            alpha *= pixelScale
             psf_kwargs = {'psf_type': psf_type, 'alpha': alpha, 'beta': beta}
         elif psf_type == 'pixel':
             kernel = util.cut_edges(kernel_large, psf_size)
@@ -168,46 +165,19 @@ class Analysis(Catalogue):
             raise ValueError('psf type %s not in list' % psf_type)
         return psf_kwargs, restrict_psf, star_list
 
-    def get_psf_from_fits(self, path2fits, psf_type, psf_size, psf_size_large=91):
-        """
-        ment to import a psf from Tiny Tim
-        :param path2fits: path to the fits file
-        :return:
-        """
-        psf_data = pyfits.getdata(path2fits)
-        kernel = util.cut_edges_TT(psf_data, psf_size)
-        kernel_large = util.cut_edges_TT(psf_data, psf_size_large)
-        kernel_large = util.kernel_norm(kernel_large)
-        kernel_large_norm = np.copy(kernel_large)
-        kernel = util.kernel_norm(kernel)
-        psf_kwargs = {'psf_type': psf_type, 'kernel': kernel, 'kernel_large':kernel_large_norm}
-        return psf_kwargs
-
-    def get_psf_from_system(self, image_name, psf_size, psf_size_large=91):
-        """
-        ment to import a psf from Tiny Tim
-        :param path2fits: path to the fits file
-        :return:
-        """
-        psf_data = self.system.get_psf_data(image_name)
-        psf_kwargs = self.cut_psf(psf_data, psf_size, psf_size_large)
-        return psf_kwargs
-
-
-
-    def get_psf_errors(self, psf_kwargs, data_kwargs, star_list):
+    def get_psf_errors(self, kernel, sigma_bkg, star_list):
         """
         returns a error map of sigma prop Intensity for a stacked psf estimation
         :param psf_kwargs:
         :param star_list:
         :return:
         """
-        psf_size = len(psf_kwargs['kernel_large'])
-        kernel_mean = util.image2array(psf_kwargs['kernel_large'])
+        psf_size = len(kernel)
+        kernel_mean = util.image2array(kernel)
         weights = np.zeros(len(star_list))
         cov_i = np.zeros((psf_size**2,psf_size**2))
         num_stars = len(star_list)
-        for i in range(0,num_stars):
+        for i in range(0, num_stars):
             star_list_i = star_list[i].copy()
             star = util.cut_edges(star_list_i, psf_size)
             weights[i] = np.sum(star)
@@ -217,10 +187,10 @@ class Analysis(Catalogue):
         factor = 1./(num_stars -1)
         #weights_sum = sum(weights)
         sigma2_stack = factor*util.array2image(np.diag(cov_i))
-        psf_stack = psf_kwargs['kernel_large'].copy()
+        psf_stack = kernel.copy()
         sigma2_stack_new = sigma2_stack# - (data_kwargs['sigma_background']**2/weights_sum)
         sigma2_stack_new[np.where(sigma2_stack_new < 0)] = 0
-        psf_stack[np.where(psf_stack < data_kwargs['sigma_background'])] = data_kwargs['sigma_background']
+        psf_stack[np.where(psf_stack < sigma_bkg)] = sigma_bkg
         error_map = sigma2_stack_new/(psf_stack)**2
         #error_map[np.where(error_map < psf_stack**2/data_kwargs['reduced_noise'])] = 0
         # n = len(error_map)
