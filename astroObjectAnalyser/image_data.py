@@ -130,8 +130,9 @@ class StrongLensImageData(object):
 
     def get_psf_from_file(self, kernelsize):
         if not hasattr(self, '_psf_data'):
-            self._psf_data = self._get_psf_from_file(kernelsize)
-        return self._psf_data
+            self._get_psf_from_file()
+        kernel = self.util_class.cut_psf(self._psf_data, kernelsize)
+        return kernel
 
     def psf_fit(self, psf_type):
         private = '_' + psf_type
@@ -218,14 +219,12 @@ class StrongLensImageData(object):
             self._HDUFile, self._image_no_border = ImageConfig.get_source_cat(image, conf_args)
         return self._HDUFile, self._image_no_border
 
-    def _get_psf_from_file(self, kernelsize):
+    def _get_psf_from_file(self):
         """
         loads in psf data stored in Tiny_Tim folder of the lens system
         :return:
         """
-        psf_data = pyfits.getdata(self.local_psf_filename)
-        kernel = self.util_class.cut_psf(psf_data, kernelsize)
-        return kernel
+        self._psf_data = pyfits.getdata(self.local_psf_filename)
 
     def header_info(self):
         """

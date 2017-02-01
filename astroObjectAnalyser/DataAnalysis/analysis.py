@@ -27,7 +27,7 @@ class Analysis(Catalogue):
         if kwargs_cut is None:
             kwargs_cut = self.estimate_star_thresholds(cat)
         mask = self.find_objects(cat, kwargs_cut)
-        star_list = self.get_objects_image(image, cat, mask, cut_radius=10, cut_fixed=61)
+        star_list = self.get_objects_image(image, cat, mask, cut_fixed=31)
         fitting = Fitting()
         mean_list = fitting.fit_sample(star_list, mean, rms, poisson, n_walk=50, n_iter=50, threadCount=1, psf_type=psf_type)
         kernel, mean_list, restrict_psf, star_list_shift = self.stacking(star_list, mean_list, mean, psf_type, restrict_psf=restrict_psf)
@@ -52,8 +52,8 @@ class Analysis(Catalogue):
                 elif psf_type == 'moffat':
                     amp, alpha, beta, center_x, center_y = mean_list[i]
                 else:
-                    raise ValueError('psf type %s not valid', (psf_type))
-                shifted = interp.shift(data, [-center_y, -center_x], order=2)
+                    raise ValueError('psf type %s not valid' % psf_type)
+                shifted = interp.shift(data, [-center_y-0.5, -center_x-0.5], order=2)
                 shifteds.append(shifted)
                 mean_list_select.append(mean_list[i])
                 print('=== object ===', i, center_x, center_y)
