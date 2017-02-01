@@ -5,7 +5,6 @@ import scipy.ndimage.interpolation as interp
 import scipy.ndimage.filters as filters
 
 import astrofunc.util as util
-from astrofunc.LensingProfiles.gaussian import Gaussian
 
 from astroObjectAnalyser.DataAnalysis.psf_fitting import Fitting
 from astroObjectAnalyser.DataAnalysis.catalogues import Catalogue
@@ -16,7 +15,7 @@ class Analysis(Catalogue):
     class which analyses data and fits a psf
     """
 
-    def get_psf(self, image, cat, mean, rms, poisson, psf_type='moffat', restrict_psf=None):
+    def get_psf(self, image, cat, mean, rms, poisson, psf_type='moffat', restrict_psf=None, kwargs_cut=None):
         """
         fit a given psf model
         :param image: cutout image to fit a profile on
@@ -25,45 +24,27 @@ class Analysis(Catalogue):
         :param poisson: reduction factor for poisson noise
         :return: parameters of the psf model
         """
-        kwargs_cut = self.estimate_star_thresholds(cat)
+        if kwargs_cut is None:
+            kwargs_cut = self.estimate_star_thresholds(cat)
         mask = self.find_objects(cat, kwargs_cut)
         star_list = self.get_objects_image(image, cat, mask, cut_radius=10, cut_fixed=61)
         fitting = Fitting()
-        mean_list, std_list = fitting.fit_sample(star_list, mean, rms, poisson, n_walk=50, n_iter=50, threadCount=1, psf_type=psf_type)
-        kernel, mean_list, restrict_psf, star_list_shift = self.stacking(star_list, mean_list, mean, rms, poisson, psf_type, restrict_psf= restrict_psf)
-        return kernel, mean_list, restrict_psf
+        mean_list = fitting.fit_sample(star_list, mean, rms, poisson, n_walk=50, n_iter=50, threadCount=1, psf_type=psf_type)
+        kernel, mean_list, restrict_psf, star_list_shift = self.stacking(star_list, mean_list, mean, psf_type, restrict_psf=restrict_psf)
+        return kernel, mean_list, restrict_psf, star_list
 
-    def get_psf_outside(self, HDUFile, image_no_border, exp_time, psf_type='moffat', restrict_psf=None, kwargs_cut={}):
-        """
-        fit a given psf model without saving it in the system class, dangerous!
-        :param image: cutout image to fit a profile on
-        :param mean: mean background level
-        :param rms: rms value of background
-        :param poisson: reduction factor for poisson noise
-        :return: parameters of the psf model
-        """
-        mean, rms = self.get_background(HDUFile)
-        cat = self.get_source_cat(HDUFile)
-        if kwargs_cut == {}:
-            kwargs_cut = self.estimate_star_thresholds(cat)
-        mask = self.find_objects(cat, kwargs_cut)
-        star_list = self.get_objects_image(image_no_border, cat, mask, cut_radius=10, cut_fixed=61)
-        fitting = Fitting()
-        mean_list = fitting.fit_sample(star_list, mean, rms, exp_time, n_walk=100, n_iter=100, threadCount=1, psf_type=psf_type)
-        kernel, mean_list, restrict_psf, star_list_shift = self.stacking(star_list, mean_list, mean, rms, exp_time, psf_type, restrict_psf=restrict_psf)
-        return kernel, mean_list, restrict_psf, star_list_shift
-
-    def stacking(self, star_list, mean_list, mean, rms, poisson, psf_type, restrict_psf=None):
+    def stacking(self, star_list, mean_list, mean, psf_type, restrict_psf=None):
         """
 
         :param star_list:
         :return:
         """
-        if restrict_psf == None:
-            restrict_psf = self.add_criteria_2(star_list, mean_list, mean, rms, poisson)
+        num_stars = len(star_list)
+        if restrict_psf is None:
+            restrict_psf = [True]*num_stars
         shifteds = []
         mean_list_select = []
-        for i in range(len(star_list)):
+        for i in range(num_stars):
             if restrict_psf[i] is True:
                 data = star_list[i]-mean
                 if psf_type == 'gaussian' or psf_type == 'pixel':
@@ -93,41 +74,6 @@ class Analysis(Catalogue):
         kernel = util.kernel_norm(new)
         return kernel, mean_list_select, restrict_psf, shifteds
 
-    def add_criteria(self, star_list, mean_list, mean, rms, exp_time):
-        """
-        additional criteria of whether one should use the object to estimate the psf.
-        :param star_list:
-        :param mean_list:
-        :return: list of bool with length of star_list
-        """
-        gaussian = Gaussian()
-        num = len(star_list)
-        X2_list = np.zeros((num))
-        restricted_list = []
-        for i in range(num):
-            data = star_list[i]
-            numPix = 21
-            data = util.cut_edges(data, numPix)
-            amp, sigma, center_x, center_y = mean_list[i]
-            x_grid, y_grid = util.make_grid(numPix,1.)
-            model_1D = gaussian.function(x_grid, y_grid, amp, sigma, sigma, center_x, center_y)
-            model = util.array2image(model_1D)
-            X2_list[i] = np.sum((data - model - mean)**2/(model/exp_time+rms**2))
-        X2_min = np.min(X2_list)
-        for i in range(num):
-            if X2_list[i] > 10**2 * X2_min:
-                restricted_list.append(False)
-            else:
-                restricted_list.append(True)
-        return restricted_list
-
-    def add_criteria_2(self, star_list, mean_list, mean, rms, exp_time):
-        num = len(star_list)
-        restricted_list = []
-        for i in range(num):
-            restricted_list.append(True)
-        return restricted_list
-
     def get_psf_kwargs_update(self, psf_type, image, exp_time, HDUFile, pixelScale, psf_size=None, psf_size_large=91, filter_object=None, kwargs_cut={}):
         """
         does the same as get_psf_kwargs but can also restrict itself to specially chosen objects
@@ -137,7 +83,7 @@ class Analysis(Catalogue):
         :param filter_object:
         :return:
         """
-        kernel_large, mean_list, restrict_psf, star_list = self.get_psf_outside(HDUFile, image, exp_time, psf_type, filter_object, kwargs_cut)
+        kernel_large, mean_list, restrict_psf, star_list = self.get_psf(HDUFile, image, exp_time, psf_type, filter_object, kwargs_cut)
         if psf_type == 'gaussian':
             sigma = mean_list[1]*pixelScale
             psf_kwargs = {'psf_type': psf_type, 'sigma': sigma}

@@ -115,9 +115,9 @@ class Catalogue(object):
         :return:
         """
         nx, ny = image.shape
-        x_center = np.array(cat.data['X_IMAGE'],dtype=float)
-        y_center = np.array(cat.data['Y_IMAGE'],dtype=float)
-        size = np.array(cat.data['FLUX_RADIUS'],dtype=float)
+        x_center = np.array(cat.data['X_IMAGE'], dtype=float)
+        y_center = np.array(cat.data['Y_IMAGE'], dtype=float)
+        size = np.array(cat.data['FLUX_RADIUS'], dtype=float)
         size_mask = size[mask]
         x_center_mask = x_center[mask]
         y_center_mask = y_center[mask]

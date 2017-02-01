@@ -197,7 +197,7 @@ class Fitting(object):
             numParam = 5
         else:
             raise ValueError('type %s is not a valid input' %(type))
-        mean_list = np.zeros((n,numParam))
+        mean_list = np.zeros((n, numParam))
         for i in range(n):
             image = star_list[i]
             image = util.cut_edges(image, 31)
