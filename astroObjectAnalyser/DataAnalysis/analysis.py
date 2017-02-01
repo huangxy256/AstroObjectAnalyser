@@ -31,7 +31,7 @@ class Analysis(Catalogue):
         fitting = Fitting()
         mean_list = fitting.fit_sample(star_list, mean, rms, poisson, n_walk=50, n_iter=50, threadCount=1, psf_type=psf_type)
         kernel, mean_list, restrict_psf, star_list_shift = self.stacking(star_list, mean_list, mean, psf_type, restrict_psf=restrict_psf)
-        return kernel, mean_list, restrict_psf, star_list
+        return kernel, mean_list, restrict_psf, star_list_shift
 
     def stacking(self, star_list, mean_list, mean, psf_type, restrict_psf=None):
         """
