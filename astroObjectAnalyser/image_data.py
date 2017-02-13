@@ -425,7 +425,7 @@ class StrongLensImageData(object):
         """
         head = self._header_cutout
         wcs = pywcs.WCS(head)
-        x_0, y_0 = wcs.wcs_world2pix(self.ra, self.dec, 0)
+        x_0, y_0 = wcs.all_world2pix(self.ra, self.dec, 0)
         return x_0, y_0
 
     @property
@@ -436,7 +436,7 @@ class StrongLensImageData(object):
         """
         head = self._header_cutout
         wcs = pywcs.WCS(head)
-        ra_0, dec_0 = wcs.wcs_pix2world(0, 0, 0)
+        ra_0, dec_0 = wcs.all_pix2world(0, 0, 0)
         cos_dec = np.cos(self.dec / 360 * 2 * np.pi)
         d_ra = (ra_0 - self.ra) * 3600. * cos_dec
         d_dec = (dec_0 - self.dec) * 3600.

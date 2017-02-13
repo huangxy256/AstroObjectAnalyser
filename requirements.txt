@@ -1,2 +1,3 @@
 wheel>=0.22
 cosmoHammer
+-e git://github.com/sibirrer/astrofunc.git#egg=astrofunc
