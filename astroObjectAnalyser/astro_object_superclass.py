@@ -421,6 +421,16 @@ class StrongLensSystem(object):
         pix2coord_transform, coord2pix_transform = image_data_obj.transforms
         return coord2pix_transform
 
+    def get_transform_matrix_pix2angle(self, attrname):
+        """
+        linear transformation matrix of relative angular [arcsec] to pixel coordinates (inverse
+        :param attrname: image file name
+        :return: 2x2 matrix
+        """
+        image_data_obj = getattr(self, attrname)
+        pix2coord_transform, coord2pix_transform = image_data_obj.transforms
+        return pix2coord_transform
+
     def get_HDUFile(self, attrname, force=False):
         """
 
