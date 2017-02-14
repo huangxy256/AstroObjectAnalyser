@@ -42,6 +42,8 @@ class StrongLensImageData(object):
         self.analysis = Analysis()
         self.util_class = Util_class()
         self.data_type = data_type
+        self._extension_image = 0
+        self._extension_wht = 1
 
 
     @property
@@ -115,7 +117,7 @@ class StrongLensImageData(object):
     @property
     def CCD_gain(self):
         if not hasattr(self, '_CCD_gain'):
-            if self.data_type == 'DES':
+            if self.data_type in ['DES', 'GEMINI']:
                 self._CCD_gain = self.header.get('GAIN')
             else:
                 self._CCD_gain = self.header_primary.get('CCDGAIN')
@@ -127,6 +129,11 @@ class StrongLensImageData(object):
         if not hasattr(self, '_background'):
             self._background_mean, self._background_rms = self._get_background()
         return self._background_mean, self._background_rms
+
+    def set_extension(self, ext_image=0, ext_wht=1):
+        """"""
+        self._extension_image = ext_image
+        self._extension_wht = ext_wht
 
     def get_psf_from_file(self, kernelsize):
         if not hasattr(self, '_psf_data'):
@@ -234,6 +241,8 @@ class StrongLensImageData(object):
         file = pyfits.open(self.local_filename)
         if self.data_type == 'DES' or self.data_type == 'cosmos' or self.data_type == "HST_new":
             self._header = file[0].header
+        elif self.data_type == 'GEMINI':
+            self._header = file[self._extension_image].header
         else:
             self._header = file['SCI'].header  # this is the header of the science image
         file.close()
@@ -284,6 +293,8 @@ class StrongLensImageData(object):
             data_full = file[0].data
         elif self.data_type == "HST":
             data_full = file['SCI'].data
+        elif self.data_type == 'GEMINI':
+            data_full = file[self._extension_image].data
         else:
             data_full = file[0].data
         file.close()
@@ -301,6 +312,8 @@ class StrongLensImageData(object):
             file = pyfits.open(self.local_filename)
             if self.data_type == 'DES':
                 exp_full = file[1].data
+            elif self.data_type == 'GEMINI':
+                exp_full = file[self._extension_wht].data
             else:
                 exp_full = file['WHT'].data
         file.close()
@@ -318,6 +331,9 @@ class StrongLensImageData(object):
             if self.data_type == 'cosmos' or self.data_type == 'DES':
                 self._header_cutout = file[0].header
                 self._data_cutout = file[0].data
+            elif self.data_type == 'GEMINI':
+                self._header_cutout = file[self._extension_image].header
+                self._header_cutout = file[self._extension_image].data
             else:
                 self._header_cutout = file['SCI'].header
                 self._data_cutout = file['SCI'].data

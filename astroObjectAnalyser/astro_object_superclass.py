@@ -138,6 +138,16 @@ class StrongLensSystem(object):
         image_data_obj = getattr(self, attrname)
         image_data_obj.data_type = data_type
 
+    def set_extension(self, attrname, ext_image=0, ext_wht=1):
+        """
+
+        :param ext_image:
+        :param ext_wht:
+        :return:
+        """
+        image_data_obj = getattr(self, attrname)
+        image_data_obj.set_extension(ext_image, ext_wht)
+
     def get_full_image(self, attrname):
         """
 

@@ -130,7 +130,7 @@ class Analysis(Catalogue):
             rel_array = np.array([util.image2array(star)/weights[i]-kernel_mean])
             a = (rel_array.T).dot(rel_array)
             cov_i += a
-        factor = 1./(num_stars -1)
+        factor = 1./(num_stars)
         #weights_sum = sum(weights)
         sigma2_stack = factor*util.array2image(np.diag(cov_i))
         psf_stack = kernel.copy()
