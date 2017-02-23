@@ -2,9 +2,11 @@ __author__ = 'sibirrer'
 
 import numpy as np
 import scipy.ndimage.interpolation as interp
-import scipy.ndimage.filters as filters
+import copy
 
 import astrofunc.util as util
+from astrofunc.util import Util_class
+util_class = Util_class()
 
 from astroObjectAnalyser.DataAnalysis.psf_fitting import Fitting
 from astroObjectAnalyser.DataAnalysis.catalogues import Catalogue
@@ -15,7 +17,8 @@ class Analysis(Catalogue):
     class which analyses data and fits a psf
     """
 
-    def get_psf(self, image, cat, mean, rms, poisson, psf_type='moffat', restrict_psf=None, kwargs_cut=None):
+    def get_psf(self, image, cat, mean, rms, poisson, psf_type='moffat', restrict_psf=None, kwargs_cut=None
+                , cutfixed=31, symmetry=1):
         """
         fit a given psf model
         :param image: cutout image to fit a profile on
@@ -27,13 +30,14 @@ class Analysis(Catalogue):
         if kwargs_cut is None:
             kwargs_cut = self.estimate_star_thresholds(cat)
         mask = self.find_objects(cat, kwargs_cut)
-        star_list = self.get_objects_image(image, cat, mask, cut_fixed=31)
+        star_list = self.get_objects_image(image, cat, mask, cut_fixed=cutfixed)
         fitting = Fitting()
         mean_list = fitting.fit_sample(star_list, mean, rms, poisson, n_walk=50, n_iter=50, threadCount=1, psf_type=psf_type)
-        kernel, mean_list, restrict_psf, star_list_shift = self.stacking(star_list, mean_list, mean, psf_type, restrict_psf=restrict_psf)
+        kernel, mean_list, restrict_psf, star_list_shift = self.stacking(star_list, mean_list, mean, psf_type
+                                                                         , restrict_psf=restrict_psf, symmetry=symmetry)
         return kernel, mean_list, restrict_psf, star_list_shift
 
-    def stacking(self, star_list, mean_list, mean, psf_type, restrict_psf=None):
+    def stacking(self, star_list, mean_list, mean, psf_type, restrict_psf=None, symmetry=1):
         """
 
         :param star_list:
@@ -54,24 +58,27 @@ class Analysis(Catalogue):
                 else:
                     raise ValueError('psf type %s not valid' % psf_type)
                 shifted = interp.shift(data, [-center_y-0.5, -center_x-0.5], order=2)
-                shifteds.append(shifted)
+                sym_shifted = util_class.symmetry_average(shifted, symmetry)
+                shifteds.append(sym_shifted)
                 mean_list_select.append(mean_list[i])
                 print('=== object ===', i, center_x, center_y)
                 import matplotlib.pylab as plt
                 fig, ax1 = plt.subplots()
-                im = ax1.matshow(np.log10(shifted), origin='lower')
+                im = ax1.matshow(np.log10(sym_shifted), origin='lower')
                 plt.axes(ax1)
                 fig.colorbar(im)
                 plt.show()
 
         combined = sum(shifteds)
         mean_list_select = np.mean(mean_list_select[:])
-        new=np.empty_like(combined)
+        """
+        new = np.empty_like(combined)
         max_pix = np.max(combined)
         p = combined[combined >= max_pix/10**6]  #in the SIS regime
         new[combined < max_pix/10**6] = 0
         new[combined >= max_pix/10**6] = p
-        kernel = util.kernel_norm(new)
+        """
+        kernel = util.kernel_norm(combined)
         return kernel, mean_list_select, restrict_psf, shifteds
 
     def get_psf_kwargs_update(self, psf_type, image, exp_time, HDUFile, pixelScale, psf_size=None, psf_size_large=91, filter_object=None, kwargs_cut={}):
@@ -133,7 +140,7 @@ class Analysis(Catalogue):
         factor = 1./(num_stars)
         #weights_sum = sum(weights)
         sigma2_stack = factor*util.array2image(np.diag(cov_i))
-        psf_stack = kernel.copy()
+        psf_stack = copy.deepcopy(kernel)
         sigma2_stack_new = sigma2_stack# - (data_kwargs['sigma_background']**2/weights_sum)
         sigma2_stack_new[np.where(sigma2_stack_new < 0)] = 0
         psf_stack[np.where(psf_stack < sigma_bkg)] = sigma_bkg
@@ -141,5 +148,5 @@ class Analysis(Catalogue):
         #error_map[np.where(error_map < psf_stack**2/data_kwargs['reduced_noise'])] = 0
         # n = len(error_map)
         #error_map[(n-1)/2-1:(n-1)/2+2,(n-1)/2-1:(n-1)/2+2] += 0
-        error_map = filters.gaussian_filter(error_map, sigma=0.5)
+        #error_map = filters.gaussian_filter(error_map, sigma=0.5)
         return error_map
