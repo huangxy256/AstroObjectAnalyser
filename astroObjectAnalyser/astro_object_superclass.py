@@ -401,6 +401,20 @@ class StrongLensSystem(object):
         image_data_obj.dec_cutout_cent = image_data_obj.dec + delta_dec/3600.
         print("WARNING: This command may have unexpected consequences for the relative coordinate system!")
 
+    def shift_system_center(self, delta_ra, delta_dec):
+        """
+
+        :param delta_ra:
+        :param delta_dec:
+        :return:
+        """
+        assert hasattr(self, 'ra')
+        assert hasattr(self, 'dec')
+        cos_dec = np.cos(self.dec / 360 * 2 * np.pi)
+        self.ra += delta_ra/3600./cos_dec
+        self.dec += delta_dec/3600.
+        print("WARNING: This command may have unexpected consequences for the relative coordinate system!")
+
     def get_pixel_zero_point(self, attrname):
         """
         get pixel coordinate of lens system coordinate
