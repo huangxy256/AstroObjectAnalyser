@@ -368,7 +368,6 @@ class StrongLensSystem(object):
         image_data_obj = getattr(self, attrname)
         return image_data_obj.get_psf_from_file(kernelsize)
 
-
     def get_background(self, attrname):
         """
 

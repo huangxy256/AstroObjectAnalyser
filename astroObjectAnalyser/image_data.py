@@ -6,10 +6,10 @@ import astropy.io.fits as pyfits
 import astropy.wcs as pywcs
 import astropy.coordinates as coords
 import numpy as np
-import os
+
 import astrofunc.util as util
 from astrofunc.util import Util_class
-
+import pyextract.image_config as ImageConfig
 
 
 #internal modules
@@ -221,7 +221,7 @@ class StrongLensImageData(object):
             image = self.image_full()
             exp_time = self.exposure_time
             CCD_gain = self.CCD_gain
-            import pyextract.image_config as ImageConfig
+
             conf_args = ImageConfig.config_arguments(exp_time, CCD_gain)
             self._HDUFile, self._image_no_border = ImageConfig.get_source_cat(image, conf_args)
         return self._HDUFile, self._image_no_border
@@ -395,7 +395,6 @@ class StrongLensImageData(object):
         else:
             exp_map = None
         ra_coord, dec_coord = self.get_coordinates(xmin, xmax, ymin, ymax, wcs)
-
         return img, head, exp_map, ra_coord, dec_coord
 
     def change_header(self, head, xmin, xmax, ymin, ymax):
