@@ -328,7 +328,7 @@ class StrongLensSystem(object):
         :param attrname: image file name
         :return: effective exposure time for each pixel (wheight map)
         """
-        image_data_obj = getattr(self,attrname)
+        image_data_obj = getattr(self, attrname)
         return image_data_obj.exposure_map
 
     def get_CCD_gain(self, attrname):
@@ -502,3 +502,4 @@ class StrongLensSystem(object):
                 angle_dec = Angle(imPos[i, 1], unit=u.degree)
                 self.image_pos_ra[i] = (ra_cent - angle_ra.degree)/arcsec*np.cos(angle_dec)
                 self.image_pos_dec[i] = (dec_cent - angle_dec.degree)/arcsec
+

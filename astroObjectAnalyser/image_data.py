@@ -480,3 +480,5 @@ class StrongLensImageData(object):
         _pix2coord_transform, _coord2pix_transform = self.transforms
         ra_pos, dec_pos = util.map_coord2pix(x_pos, y_pos, ra_0, dec_0, _pix2coord_transform)
         return ra_pos, dec_pos
+
+
