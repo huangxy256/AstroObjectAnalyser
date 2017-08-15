@@ -380,18 +380,17 @@ class StrongLensImageData(object):
             ymin, ymax = np.max([0, yy-yw/np.abs(self.cd2)]), np.min([self.naxis2, yy+yw/np.abs(self.cd2)])
         else:
             raise Exception("Can't use units %s." % units)
-
         if xmax < 0 or ymax < 0:
             raise ValueError("Max Coordinate is outside of map: %f,%f." % (xmax,ymax))
         if ymin >= head.get('NAXIS2') or xmin >= head.get('NAXIS1'):
             raise ValueError("Min Coordinate is outside of map: %f,%f." % (xmin,ymin))
 
         head = self.change_header(head, xmin, xmax, ymin, ymax)
-        img = self.image_full()[ymin:ymax, xmin:xmax].copy()
+        img = self.image_full()[int(ymin):int(ymax), int(xmin):int(xmax)].copy()
         # img = file['SCI'].data[ymin:ymax, xmin:xmax]
         if verbose: print("Cut image %s with dims %s to %s.  xrange: %f:%f, yrange: %f:%f" % (fits_filename, file['SCI'].data.shape, img.shape, xmin, xmax, ymin, ymax))
         if exposure_map:
-            exp_map = self.exposure_full()[ymin:ymax, xmin:xmax].copy()
+            exp_map = self.exposure_full()[int(ymin):int(ymax), int(xmin):int(xmax)].copy()
         else:
             exp_map = None
         ra_coord, dec_coord = self.get_coordinates(xmin, xmax, ymin, ymax, wcs)

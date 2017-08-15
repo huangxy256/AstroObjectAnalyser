@@ -125,6 +125,6 @@ class Catalogue(object):
         for i in range(num_objects):
             xc, yc = x_center_mask[i], y_center_mask[i]
             if (xc-numPix > 0) and (xc+numPix < nx) and (yc-numPix > 0) and (yc+numPix < ny):
-                cutout = image[xc-numPix:xc+numPix+1, yc-numPix:yc+numPix+1]
+                cutout = image[int(xc-numPix):int(xc+numPix+1), int(yc-numPix):int(yc+numPix+1)]
                 list.append(cutout)
         return list
