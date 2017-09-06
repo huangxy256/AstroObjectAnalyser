@@ -414,25 +414,25 @@ class StrongLensSystem(object):
         self.dec += delta_dec/3600.
         print("WARNING: This command may have unexpected consequences for the relative coordinate system!")
 
-    def get_pixel_zero_point(self, attrname):
+    def pixel_at_angle_0(self, attrname):
         """
         get pixel coordinate of lens system coordinate
         :param attrname: image file name
         :return: x_pix, y_pix
         """
         image_data_obj = getattr(self, attrname)
-        x0, y0 = image_data_obj.get_pixel_zero_point
-        return x0, y0
+        x_at_radec_0, y_at_radec_0 = image_data_obj.pixel_at_angle_0
+        return x_at_radec_0, y_at_radec_0
 
-    def get_coord_zero_point(self, attrname):
+    def coord_at_pixel_0(self, attrname):
         """
         get relative ra,dec coordinate of pixel image 0,0 of cutout
         :param attrname: image file name
         :return: ra, dec
         """
         image_data_obj = getattr(self, attrname)
-        x0, y0 = image_data_obj.get_coord_zero_point
-        return x0, y0
+        ra_at_xy_0, dec_at_xy_0 = image_data_obj.coord_at_pixel_0
+        return ra_at_xy_0, dec_at_xy_0
 
     def get_transform_matrix_angle2pix(self, attrname):
         """

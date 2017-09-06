@@ -432,7 +432,7 @@ class StrongLensImageData(object):
         return ra_coords, dec_coords
 
     @property
-    def get_pixel_zero_point(self):
+    def pixel_at_angle_0(self):
         """
 
         :return: pixel coordinate (x_0, y_0) of (ra,dec) = (0,0)
@@ -443,7 +443,7 @@ class StrongLensImageData(object):
         return x_0, y_0
 
     @property
-    def get_coord_zero_point(self):
+    def coord_at_pixel_0(self):
         """
 
         :return: angular coordinate (relative arc sec) (ra_0, dec_0) of (pix_x,pix_y) = (0,0)
@@ -463,7 +463,7 @@ class StrongLensImageData(object):
         :param dec: dec coordinates, relative
         :return: x, y pixel coordinates
         """
-        x_0, y_0 = self.get_pixel_zero_point
+        x_0, y_0 = self.pixel_at_angle_0
         _pix2coord_transform, _coord2pix_transform = self.transforms
         x_pos, y_pos = util.map_coord2pix(ra, dec, x_0, y_0, _coord2pix_transform)
         return x_pos, y_pos
@@ -475,7 +475,7 @@ class StrongLensImageData(object):
         :param y_pos: pixel coordinate
         :return: relative ra, dec coordinate
         """
-        ra_0, dec_0 = self.get_coord_zero_point
+        ra_0, dec_0 = self.coord_at_pixel_0
         _pix2coord_transform, _coord2pix_transform = self.transforms
         ra_pos, dec_pos = util.map_coord2pix(x_pos, y_pos, ra_0, dec_0, _pix2coord_transform)
         return ra_pos, dec_pos
