@@ -176,7 +176,7 @@ class StrongLensSystem(object):
         except:
             print('no PSF file found')
             wht_path = None
-        return image_path, wht_path
+        return image_path, wht_path, psf_path
 
     def get_cutout_image(self, attrname, cutout_scale, force=False):
         """
@@ -232,7 +232,7 @@ class StrongLensSystem(object):
         """
         returns pixel scale
         :param attrname: image file name
-        :return: returns pixel scale (unrotated)
+        :return: returns pixel scale (unrotated) (if in arcseconds, devide by 3600!)
         """
         image_data_obj = getattr(self, attrname)
         return image_data_obj.cd1, image_data_obj.cd2
