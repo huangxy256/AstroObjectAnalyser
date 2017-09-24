@@ -297,6 +297,7 @@ class StrongLensImageData(object):
             data_full = file[self._extension_image].data
         else:
             data_full = file[0].data
+        data_full[np.isnan(data_full)] = 0
         file.close()
         return data_full
 
@@ -316,6 +317,7 @@ class StrongLensImageData(object):
                 exp_full = file[self._extension_wht].data
             else:
                 exp_full = file['WHT'].data
+        exp_full[np.isnan(exp_full)] = 0
         file.close()
         return exp_full
 
