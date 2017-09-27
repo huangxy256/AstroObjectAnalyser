@@ -65,9 +65,9 @@ class TestStrongLensImageData(object):
         cos_dec = np.cos(self.system1.dec / 360 * 2 * np.pi)
         print(cos_dec)
         print(np.sqrt((ra_coords[yw, xw]*cos_dec)**2 + dec_coords[yw, xw]**2))
-        ra, dec = self.system1.map_pix2coord(0.5, 0.5)
-        npt.assert_almost_equal(ra_coords[yw, xw], 0, decimal=8)
-        npt.assert_almost_equal(dec_coords[yw, xw], 0, decimal=8)
+        ra, dec = self.system1.map_pix2coord(xw, yw)
+        npt.assert_almost_equal(ra_coords[yw, xw]*cos_dec, ra, decimal=5)
+        npt.assert_almost_equal(dec_coords[yw, xw], dec, decimal=5)
 
     def test_image_full(self):
         """
