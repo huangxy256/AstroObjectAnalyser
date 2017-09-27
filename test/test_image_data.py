@@ -62,6 +62,10 @@ class TestStrongLensImageData(object):
         assert len(img[0]) == 2*xw
         assert len(ra_coords) == yw*2
         assert len(ra_coords[0]) == xw*2
+        cos_dec = np.cos(self.system1.dec / 360 * 2 * np.pi)
+        print(cos_dec)
+        print(np.sqrt((ra_coords[yw, xw]*cos_dec)**2 + dec_coords[yw, xw]**2))
+        ra, dec = self.system1.map_pix2coord(0.5, 0.5)
         npt.assert_almost_equal(ra_coords[yw, xw], 0, decimal=8)
         npt.assert_almost_equal(dec_coords[yw, xw], 0, decimal=8)
 
@@ -92,6 +96,38 @@ class TestStrongLensImageData(object):
         assert self.system1.header_cutout['NAXIS1'] == 348
         assert self.system1.header_cutout['NAXIS2'] == 349
         assert abs(self.system1.data_cutout[153, 173] - 1.1558878) < 0.0001
+
+    def test_cutout_coordinates(self):
+        """
+        test routine when providing the cutout image already
+        """
+        filename = 'Test_data/RXJ1131_1231_74010_cutout.fits'
+        path = os.path.dirname(__file__)
+        cutout_filename = os.path.join(path, filename)
+        self.system1.image_cutout(self.ra, self.dec, cutout_scale=50, cutout_filename=cutout_filename)
+
+        pix2coord, coord2pix = self.system1.transforms
+        from numpy.linalg import inv
+        pix2coord_new = inv(coord2pix)
+        npt.assert_almost_equal(pix2coord_new[0, 0], pix2coord[0, 0], decimal=8)
+        npt.assert_almost_equal(pix2coord_new[0, 1], pix2coord[0, 1], decimal=8)
+        npt.assert_almost_equal(pix2coord_new[1, 0], pix2coord[1, 0], decimal=8)
+        npt.assert_almost_equal(pix2coord_new[1, 1], pix2coord[1, 1], decimal=8)
+
+        ra, dec = self.system1.map_pix2coord(0, 0)
+        ra_0, dec_0 = self.system1.coord_at_pixel_0
+        assert ra == ra_0
+        assert dec_0 == dec
+
+        x_0, y_0 = self.system1.pixel_at_angle_0
+        x, y = self.system1.map_coord2pix(0, 0)
+        assert x_0 == x
+        assert y_0 == y
+        x, y = 50., 50.
+        ra, dec = self.system1.map_pix2coord(x, y)
+        x_, y_ = self.system1.map_coord2pix(ra, dec)
+        npt.assert_almost_equal(x, x_, decimal=8)
+        npt.assert_almost_equal(y, y_, decimal=8)
 
     def teardown(self):
         #tidy up

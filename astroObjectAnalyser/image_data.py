@@ -330,6 +330,8 @@ class StrongLensImageData(object):
                 self._header_cutout = file['SCI'].header
                 self._data_cutout = file['SCI'].data
             file.close()
+            self._xmin_c = 0
+            self._ymin_c = 0
         else:
             if cutout_scale is None:
                 cutout_scale = 50
@@ -443,13 +445,17 @@ class StrongLensImageData(object):
 
         :return: angular coordinate (relative arc sec) (ra_0, dec_0) of (pix_x,pix_y) = (0,0)
         """
-        head = self.header
-        wcs = pywcs.WCS(head)
-        ra_0, dec_0 = wcs.all_pix2world(self._xmin_c, self._ymin_c, 0)
-        cos_dec = np.cos(self.dec / 360 * 2 * np.pi)
-        d_ra = (ra_0 - self.ra) * 3600. * cos_dec
-        d_dec = (dec_0 - self.dec) * 3600.
-        return d_ra, d_dec
+        #head = self.header
+        #wcs = pywcs.WCS(head)
+        x0, y0 = self.pixel_at_angle_0
+        _pix2coord_transform, _coord2pix_transform = self.transforms
+        ra_pos, dec_pos = util.map_coord2pix(-x0, -y0, 0, 0, _pix2coord_transform)
+        #ra_0, dec_0 = wcs.all_pix2world(self._xmin_c, self._ymin_c, 0)
+        #cos_dec = np.cos(self.dec / 360 * 2 * np.pi)
+        #d_ra = (ra_0 - self.ra) * 3600. * cos_dec
+        #d_dec = (dec_0 - self.dec) * 3600.
+        #return d_ra, d_dec
+        return ra_pos, dec_pos
 
     def map_coord2pix(self, ra, dec):
         """
@@ -498,15 +504,15 @@ class StrongLensImageData(object):
         """
         head = self.header
         wcs = pywcs.WCS(head)
-        xc, yc = wcs.all_world2pix(self.ra, self.dec, 0)
+        xc, yc = self.pixel_at_angle_0
         ra_0, dec_0 = wcs.all_pix2world(xc, yc, 0)
         ra_10, dec_10 = wcs.all_pix2world(xc+1, yc, 0)
         ra_01, dec_01 = wcs.all_pix2world(xc, yc+1, 0)
         cos_dec = np.cos(self.dec / 360 * 2 * np.pi)
         factor = 3600.
         CD1_1 = (ra_10 - ra_0) * factor * cos_dec
-        CD2_1 = (ra_01 - ra_0) * factor * cos_dec
         CD1_2 = (dec_10 - dec_0) * factor
+        CD2_1 = (ra_01 - ra_0) * factor * cos_dec
         CD2_2 = (dec_01 - dec_0) * factor
 
         self._pix2coord_transform = np.array([[CD1_1, CD1_2], [CD2_1, CD2_2]])
