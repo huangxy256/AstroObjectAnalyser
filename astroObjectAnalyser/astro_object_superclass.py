@@ -175,7 +175,7 @@ class StrongLensSystem(object):
             psf_path = image_data_obj.local_psf_filename
         except:
             print('no PSF file found')
-            wht_path = None
+            psf_path = None
         return image_path, wht_path, psf_path
 
     def get_cutout_image(self, attrname, cutout_scale, force=False):
@@ -453,6 +453,16 @@ class StrongLensSystem(object):
         image_data_obj = getattr(self, attrname)
         pix2coord_transform, coord2pix_transform = image_data_obj.transforms
         return pix2coord_transform
+
+    def get_transform_matrix_undistorted(self, attrname):
+        """
+        linear transformation matrix of relative angular [arcsec] to pixel coordinates
+        :param attrname: image file name
+        :return: 2x2 matrix
+        """
+        image_data_obj = getattr(self, attrname)
+        pix2coord_transform, coord2pix_transform = image_data_obj.transforms_undistorted
+        return pix2coord_transform, coord2pix_transform
 
     def get_HDUFile(self, attrname, force=False):
         """

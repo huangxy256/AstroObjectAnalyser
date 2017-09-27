@@ -176,6 +176,12 @@ class StrongLensImageData(object):
             self._transform()
         return self._pix2coord_transform, self._coord2pix_transform
 
+    @property
+    def transforms_undistorted(self):
+        if not hasattr(self, '_pix2coord_transform_undistorted') or not hasattr(self, '_coord2pix_transform_undistorted'):
+            self._transform_undistorted()
+        return self._pix2coord_transform_undistorted, self._coord2pix_transform_undistorted
+
     def get_subgrid(self, subgrid_res=2):
         if not hasattr(self, '_ra_coords_cutout') or not hasattr(self, '_dec_coords_cutout'):
             self.image_cutout(self.ra_cutout_cent, self.dec_cutout_cent, self.cutout_scale)
@@ -258,22 +264,6 @@ class StrongLensImageData(object):
         self._cd2 = self.header.get('CDELT2') if self.header.get('CDELT2') else np.sqrt(self.header.get('CD2_1')**2 + self.header.get('CD2_2')**2)
         if self.cd1 is None or self.cd2 is None:
             raise Exception("Missing CD or CDELT keywords in header")
-
-    def _transform(self, approx=False):
-        """
-        initializes the the matrix which transforms pixel to ra/dec
-        """
-        if not hasattr(self, 'header'):
-            self.header_info()
-
-        CD1_1 = self.header.get('CD1_1')*3600  # change in arc sec per pixel d(ra)/dx
-        CD1_2 = self.header.get('CD1_2')*3600
-        CD2_1 = self.header.get('CD2_1')*3600
-        CD2_2 = self.header.get('CD2_2')*3600
-
-        self._pix2coord_transform = np.array([[CD1_1, CD1_2], [CD2_1, CD2_2]])
-        det = CD1_1*CD2_2 - CD1_2*CD2_1
-        self._coord2pix_transform = np.array([[CD2_2, -CD1_2], [-CD2_1, CD1_1]])/det
 
     def pixel_number(self):
         """
@@ -382,6 +372,8 @@ class StrongLensImageData(object):
             ymin, ymax = np.max([0, yy-yw/np.abs(self.cd2)]), np.min([self.naxis2, yy+yw/np.abs(self.cd2)])
         else:
             raise Exception("Can't use units %s." % units)
+        self._xmin_c, self._xmax_c = xmin, xmax
+        self._ymin_c, self._ymax_c = ymin, ymax
         if xmax < 0 or ymax < 0:
             raise ValueError("Max Coordinate is outside of map: %f,%f." % (xmax,ymax))
         if ymin >= head.get('NAXIS2') or xmin >= head.get('NAXIS1'):
@@ -400,7 +392,8 @@ class StrongLensImageData(object):
 
     def change_header(self, head, xmin, xmax, ymin, ymax):
         """
-        changes the header to adjust information to the cutout image
+        changes the header to adjust information to the cutout image.
+        Attention, this does not mitigate distortion correction terms!
         """
         head['CRPIX1'] -= xmin
         head['CRPIX2'] -= ymin
@@ -437,12 +430,12 @@ class StrongLensImageData(object):
     def pixel_at_angle_0(self):
         """
 
-        :return: pixel coordinate (x_0, y_0) of (ra,dec) = (0,0)
+        :return: pixel coordinate (x_0, y_0) of (ra,dec) = (0,0) for cutout image
         """
-        head = self._header_cutout
+        head = self.header
         wcs = pywcs.WCS(head)
         x_0, y_0 = wcs.all_world2pix(self.ra, self.dec, 0)
-        return x_0, y_0
+        return x_0 - self._xmin_c, y_0 - self._ymin_c
 
     @property
     def coord_at_pixel_0(self):
@@ -450,9 +443,9 @@ class StrongLensImageData(object):
 
         :return: angular coordinate (relative arc sec) (ra_0, dec_0) of (pix_x,pix_y) = (0,0)
         """
-        head = self._header_cutout
+        head = self.header
         wcs = pywcs.WCS(head)
-        ra_0, dec_0 = wcs.all_pix2world(0, 0, 0)
+        ra_0, dec_0 = wcs.all_pix2world(self._xmin_c, self._ymin_c, 0)
         cos_dec = np.cos(self.dec / 360 * 2 * np.pi)
         d_ra = (ra_0 - self.ra) * 3600. * cos_dec
         d_dec = (dec_0 - self.dec) * 3600.
@@ -482,4 +475,40 @@ class StrongLensImageData(object):
         ra_pos, dec_pos = util.map_coord2pix(x_pos, y_pos, ra_0, dec_0, _pix2coord_transform)
         return ra_pos, dec_pos
 
+    def _transform_undistorted(self, approx=False):
+        """
+        initializes the the matrix which transforms pixel to ra/dec
+        """
+        if not hasattr(self, 'header'):
+            self.header_info()
 
+        CD1_1 = self.header.get('CD1_1')*3600  # change in arc sec per pixel d(ra)/dx
+        CD1_2 = self.header.get('CD1_2')*3600
+        CD2_1 = self.header.get('CD2_1')*3600
+        CD2_2 = self.header.get('CD2_2')*3600
+
+        self._pix2coord_transform_undistorted = np.array([[CD1_1, CD1_2], [CD2_1, CD2_2]])
+        det = CD1_1*CD2_2 - CD1_2*CD2_1
+        self._coord2pix_transform_undistorted = np.array([[CD2_2, -CD1_2], [-CD2_1, CD1_1]])/det
+
+    def _transform(self):
+        """
+
+        :return: linear transformation matrix for the pixel shift at (0,0) comupted with the full distortion corrections
+        """
+        head = self.header
+        wcs = pywcs.WCS(head)
+        xc, yc = wcs.all_world2pix(self.ra, self.dec, 0)
+        ra_0, dec_0 = wcs.all_pix2world(xc, yc, 0)
+        ra_10, dec_10 = wcs.all_pix2world(xc+1, yc, 0)
+        ra_01, dec_01 = wcs.all_pix2world(xc, yc+1, 0)
+        cos_dec = np.cos(self.dec / 360 * 2 * np.pi)
+        factor = 3600.
+        CD1_1 = (ra_10 - ra_0) * factor * cos_dec
+        CD2_1 = (ra_01 - ra_0) * factor * cos_dec
+        CD1_2 = (dec_10 - dec_0) * factor
+        CD2_2 = (dec_01 - dec_0) * factor
+
+        self._pix2coord_transform = np.array([[CD1_1, CD1_2], [CD2_1, CD2_2]])
+        det = CD1_1*CD2_2 - CD1_2*CD2_1
+        self._coord2pix_transform = np.array([[CD2_2, -CD1_2], [-CD2_1, CD1_1]])/det
