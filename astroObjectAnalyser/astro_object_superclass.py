@@ -257,6 +257,22 @@ class StrongLensSystem(object):
         ra_coords, dec_coords = image_data_obj.get_cutout_coords
         return ra_coords, dec_coords
 
+    def get_coordinate_grid_linear(self, attrname):
+        """
+        returns the linear transformation coordinate grid that is fully consistent with the linear operation from pixel to coordinates
+        :param attrname:
+        :return:
+        """
+        image_data_obj = getattr(self, attrname)
+        numPix = image_data_obj.numPix
+        a = np.arange(numPix)
+        matrix = np.dstack(np.meshgrid(a, a)).reshape(-1, 2)
+
+        x_idex = matrix[:, 0]
+        y_idex = matrix[:, 1]
+        ra_coords, dec_coords = self.pix2coord(attrname, x_idex, y_idex)
+        return ra_coords, dec_coords
+
     def get_coordinate_grid_relative(self, attrname):
         """
         relative RA, DEC coordinates in arcsec to the center (lens system coordinates)

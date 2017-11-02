@@ -481,6 +481,10 @@ class StrongLensImageData(object):
         ra_pos, dec_pos = util.map_coord2pix(x_pos, y_pos, ra_0, dec_0, _pix2coord_transform)
         return ra_pos, dec_pos
 
+    @property
+    def numPix(self):
+        return int(self.cutout_scale/2) * 2
+
     def _transform_undistorted(self, approx=False):
         """
         initializes the the matrix which transforms pixel to ra/dec
