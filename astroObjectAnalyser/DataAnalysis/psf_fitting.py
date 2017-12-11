@@ -200,7 +200,7 @@ class Fitting(object):
         mean_list = np.zeros((n, numParam))
         for i in range(n):
             image = star_list[i]
-            image = util.cut_edges(image, 31)
+            image = util.cut_edges(image, 33)
             if psf_type == 'gaussian'or psf_type == 'pixel':
                 mean_list[i] = self.gaussian_fit(image, mean, sigma, poisson,n_walker=n_walk, n_iter=n_iter, threadCount = threadCount)
             elif psf_type == 'moffat':

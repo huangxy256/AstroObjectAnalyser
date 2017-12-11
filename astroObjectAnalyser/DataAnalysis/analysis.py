@@ -18,7 +18,7 @@ class Analysis(Catalogue):
     """
 
     def get_psf(self, image, cat, mean, rms, poisson, psf_type='moffat', restrict_psf=None, kwargs_cut=None
-                , cutfixed=31, symmetry=1):
+                , cutfixed=33, symmetry=1):
         """
         fit a given psf model
         :param image: cutout image to fit a profile on
