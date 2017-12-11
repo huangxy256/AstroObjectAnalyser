@@ -522,3 +522,25 @@ class StrongLensImageData(object):
         self._pix2coord_transform = np.array([[CD1_1, CD1_2], [CD2_1, CD2_2]])
         det = CD1_1*CD2_2 - CD1_2*CD2_1
         self._coord2pix_transform = np.array([[CD2_2, -CD1_2], [-CD2_1, CD1_1]])/det
+
+    def _transform_large(self):
+        """
+
+        :return: linear transformation matrix for the pixel shift at (0,0) comupted with the full distortion corrections
+        """
+        head = self.header
+        wcs = pywcs.WCS(head)
+        xc, yc = self.pixel_at_angle_0
+        ra_0, dec_0 = wcs.all_pix2world(xc, yc, 0)
+        ra_10, dec_10 = wcs.all_pix2world(xc+100, yc, 0)
+        ra_01, dec_01 = wcs.all_pix2world(xc, yc+100, 0)
+        cos_dec = np.cos(self.dec / 360 * 2 * np.pi)
+        factor = 3600. * 100
+        CD1_1 = (ra_10 - ra_0) * factor * cos_dec
+        CD1_2 = (dec_10 - dec_0) * factor
+        CD2_1 = (ra_01 - ra_0) * factor * cos_dec
+        CD2_2 = (dec_01 - dec_0) * factor
+
+        self._pix2coord_transform = np.array([[CD1_1, CD1_2], [CD2_1, CD2_2]])
+        det = CD1_1*CD2_2 - CD1_2*CD2_1
+        self._coord2pix_transform = np.array([[CD2_2, -CD1_2], [-CD2_1, CD1_1]])/det

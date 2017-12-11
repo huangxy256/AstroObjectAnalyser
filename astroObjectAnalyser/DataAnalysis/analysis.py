@@ -57,7 +57,9 @@ class Analysis(Catalogue):
                     amp, alpha, beta, center_x, center_y = mean_list[i]
                 else:
                     raise ValueError('psf type %s not valid' % psf_type)
-                shifted = interp.shift(data, [-center_y-0.5, -center_x-0.5], order=2)
+                data[data < 0] = 0
+                #shifted = interp.shift(data, [-center_y-0.5, -center_x-0.5], order=2)
+                shifted = util.de_shift_kernel(data, shift_x=-center_x-0.5, shift_y=-center_y-0.5)
                 sym_shifted = util_class.symmetry_average(shifted, symmetry)
                 shifteds.append(sym_shifted)
                 mean_list_select.append(mean_list[i])
