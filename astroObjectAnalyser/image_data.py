@@ -8,9 +8,7 @@ import astropy.coordinates as coords
 import numpy as np
 
 import astrofunc.util as util
-from astrofunc.util import Util_class
 import pyextract.image_config as ImageConfig
-
 
 #internal modules
 from astroObjectAnalyser.DataAnalysis.analysis import Analysis
@@ -40,7 +38,6 @@ class StrongLensImageData(object):
 
         self.catalogue = Catalogue()
         self.analysis = Analysis()
-        self.util_class = Util_class()
         self.data_type = data_type
         self._extension_image = 0
         self._extension_wht = 1
@@ -138,7 +135,7 @@ class StrongLensImageData(object):
     def get_psf_from_file(self, kernelsize):
         if not hasattr(self, '_psf_data'):
             self._get_psf_from_file()
-        kernel = self.util_class.cut_psf(self._psf_data, kernelsize)
+        kernel = util.cut_psf(self._psf_data, kernelsize)
         return kernel
 
     def psf_fit(self, psf_type):
@@ -154,7 +151,7 @@ class StrongLensImageData(object):
             self._psf_kernel = kernel
             if not hasattr(self, '_moffat'):
                 self._moffat = psf_variables
-        kernel = self.util_class.cut_psf(self._psf_kernel, kernelsize)
+        kernel = util.cut_psf(self._psf_kernel, kernelsize)
         return kernel
 
     @property
@@ -187,7 +184,7 @@ class StrongLensImageData(object):
             self.image_cutout(self.ra_cutout_cent, self.dec_cutout_cent, self.cutout_scale)
         cos_dec = np.cos(self.dec / 360 * 2 * np.pi)
         print('test', cos_dec)
-        ra_coords_sub, dec_coord_sub = self.util_class.make_subgrid(self._ra_coords_cutout*cos_dec, self._dec_coords_cutout, subgrid_res)
+        ra_coords_sub, dec_coord_sub = util.make_subgrid(self._ra_coords_cutout*cos_dec, self._dec_coords_cutout, subgrid_res)
 
         return ra_coords_sub, dec_coord_sub
 

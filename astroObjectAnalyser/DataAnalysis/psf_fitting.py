@@ -7,7 +7,6 @@ from cosmoHammer import CosmoHammerSampler
 from cosmoHammer.util import InMemoryStorageUtil
 
 import astrofunc.util as util
-from astrofunc.util import Util_class
 from astrofunc.LensingProfiles.gaussian import Gaussian
 from astrofunc.LightProfiles.moffat import Moffat
 
@@ -30,8 +29,7 @@ class Chain(object):
         if x_grid is None or y_grid is None:
             self.x_grid, self.y_grid = util.make_grid(self.numPix, deltaPix, subgrid_res)
         else:
-            util_class = Util_class()
-            self.x_grid, self.y_grid = util_class.make_subgrid(x_grid, y_grid, subgrid_res)
+            self.x_grid, self.y_grid = util.make_subgrid(x_grid, y_grid, subgrid_res)
         self.gaussian = Gaussian()
         self.moffat = Moffat()
         self.sampling_option = sampling_option
