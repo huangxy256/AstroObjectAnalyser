@@ -6,6 +6,7 @@ import copy
 import astrofunc.util as util
 from astroObjectAnalyser.DataAnalysis.psf_fitting import Fitting
 from astroObjectAnalyser.DataAnalysis.catalogues import Catalogue
+import scipy.ndimage.interpolation as interp
 
 
 class Analysis(Catalogue):
@@ -14,7 +15,7 @@ class Analysis(Catalogue):
     """
 
     def get_psf(self, image, cat, mean, rms, poisson, psf_type='moffat', restrict_psf=None, kwargs_cut=None
-                , cutfixed=33, symmetry=1):
+                , cutfixed=33, symmetry=1, inverse_shift=True):
         """
         fit a given psf model
         :param image: cutout image to fit a profile on
@@ -30,10 +31,10 @@ class Analysis(Catalogue):
         fitting = Fitting()
         mean_list = fitting.fit_sample(star_list, mean, rms, poisson, n_walk=50, n_iter=50, threadCount=1, psf_type=psf_type)
         kernel, mean_list, restrict_psf, star_list_shift = self.stacking(star_list, mean_list, mean, psf_type
-                                                                         , restrict_psf=restrict_psf, symmetry=symmetry)
+                                                                         , restrict_psf=restrict_psf, symmetry=symmetry, inverse_shift=inverse_shift)
         return kernel, mean_list, restrict_psf, star_list_shift
 
-    def stacking(self, star_list, mean_list, mean, psf_type, restrict_psf=None, symmetry=1):
+    def stacking(self, star_list, mean_list, mean, psf_type, restrict_psf=None, symmetry=1, inverse_shift=True):
         """
 
         :param star_list:
@@ -54,8 +55,10 @@ class Analysis(Catalogue):
                 else:
                     raise ValueError('psf type %s not valid' % psf_type)
                 data[data < 0] = 0
-                #shifted = interp.shift(data, [-center_y-0.5, -center_x-0.5], order=2)
-                shifted = util.de_shift_kernel(data, shift_x=-center_x-0.5, shift_y=-center_y-0.5)
+                if inverse_shift:
+                    shifted = util.de_shift_kernel(data, shift_x=-center_x-0.5, shift_y=-center_y-0., iterations=10)
+                else:
+                    shifted = interp.shift(data, [-center_y - 0.5, -center_x - 0.5], order=2)
                 sym_shifted = util.symmetry_average(shifted, symmetry)
                 shifteds.append(sym_shifted)
                 mean_list_select.append(mean_list[i])
