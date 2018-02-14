@@ -58,7 +58,7 @@ class Analysis(Catalogue):
                 if inverse_shift:
                     shifted = util.de_shift_kernel(data, shift_x=-center_x-0.5, shift_y=-center_y-0., iterations=10)
                 else:
-                    shifted = interp.shift(data, [-center_y - 0.5, -center_x - 0.5], order=2)
+                    shifted = interp.shift(data, [-center_y - 0.5, -center_x - 0.5], order=1)
                 sym_shifted = util.symmetry_average(shifted, symmetry)
                 shifteds.append(sym_shifted)
                 mean_list_select.append(mean_list[i])

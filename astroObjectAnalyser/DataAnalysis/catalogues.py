@@ -27,10 +27,11 @@ class Catalogue(object):
         for line in list:
             line = line.strip()
             line = line.split()
-            if line[0] == 'SEXBKGND' or line[0] == 'SEXBKGND=':
-                mean = float(line[1])
-            if line[0] == 'SEXBKDEV' or line[0] == 'SEXBKDEV=':
-                rms = float(line[1])
+            if len(line) > 0:
+                if line[0] == 'SEXBKGND' or line[0] == 'SEXBKGND=':
+                    mean = float(line[1])
+                if line[0] == 'SEXBKDEV' or line[0] == 'SEXBKDEV=':
+                    rms = float(line[1])
         if mean is False or rms is False:
             raise ValueError('no mean and rms value found in list.')
         return mean, rms

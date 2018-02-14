@@ -221,13 +221,13 @@ class StrongLensImageData(object):
 
     def get_HDUFile(self, force=False):
         if not(hasattr(self, '_HDUFile') and hasattr(self, '_image_no_border') and (not force)):
-            #image = self.image_full()
+            image = self.image_full()
             image_path = self.local_filename
             exp_time = self.exposure_time
             CCD_gain = self.CCD_gain
 
             conf_args = ImageConfig.config_arguments(exp_time, CCD_gain)
-            self._HDUFile, self._image_no_border = ImageConfig.get_source_cat(image_path, conf_args)
+            self._HDUFile, self._image_no_border = ImageConfig.get_source_cat(image, imageref=image_path, conf_args=conf_args)
         return self._HDUFile, self._image_no_border
 
     def _get_psf_from_file(self):
