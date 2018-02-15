@@ -193,7 +193,7 @@ class StrongLensImageData(object):
 
         :return: mean and rms value of background
         """
-        HDUFile, _ = self.get_HDUFile()
+        HDUFile = self.get_HDUFile()
         mean, rms = self.catalogue.get_background(HDUFile)
         return mean, rms
 
@@ -202,7 +202,7 @@ class StrongLensImageData(object):
 
         :return: sextractor catalogue
         """
-        HDUFile, image_no_boarder = self.get_HDUFile()
+        HDUFile = self.get_HDUFile()
         cat = self.catalogue.get_source_cat(HDUFile)
         return cat
 
@@ -213,22 +213,23 @@ class StrongLensImageData(object):
         :return:
         """
         exp_time = self.exposure_time
-        HDUFile, image_no_boarder = self.get_HDUFile()
+        HDUFile = self.get_HDUFile()
         mean, rms = self.catalogue.get_background(HDUFile)
         cat = self.catalogue.get_source_cat(HDUFile)
-        kernel, mean_list, filter_object = self.analysis.get_psf(image_no_boarder, cat, mean, rms, exp_time, psf_type)
+        image = self.image_full()
+        kernel, mean_list, filter_object = self.analysis.get_psf(image, cat, mean, rms, exp_time, psf_type)
         return kernel, mean_list
 
     def get_HDUFile(self, force=False):
         if not(hasattr(self, '_HDUFile') and hasattr(self, '_image_no_border') and (not force)):
-            image = self.image_full()
+            #image = self.image_full()
             image_path = self.local_filename
             exp_time = self.exposure_time
             CCD_gain = self.CCD_gain
 
             conf_args = ImageConfig.config_arguments(exp_time, CCD_gain)
-            self._HDUFile, self._image_no_border = ImageConfig.get_source_cat(image, imageref=image_path, conf_args=conf_args)
-        return self._HDUFile, self._image_no_border
+            self._HDUFile = ImageConfig.get_source_cat(imageref=image_path, conf_args=conf_args)
+        return self._HDUFile
 
     def _get_psf_from_file(self):
         """
