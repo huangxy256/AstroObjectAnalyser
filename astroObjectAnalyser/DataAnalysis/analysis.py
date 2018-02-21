@@ -65,7 +65,11 @@ class Analysis(Catalogue):
                 print('=== object ===', i, center_x, center_y)
                 import matplotlib.pylab as plt
                 fig, ax1 = plt.subplots()
-                im = ax1.matshow(np.log10(sym_shifted), origin='lower')
+                v_max = np.max(np.nan_to_num(np.log10(sym_shifted)))
+                v_min = np.min(np.nan_to_num(np.log10(sym_shifted)))
+                print(v_min, 'test')
+                v_min = max(v_max-5, v_min)
+                im = ax1.matshow(np.log10(sym_shifted), origin='lower',vmin=v_min, vmax=v_max)
                 plt.axes(ax1)
                 fig.colorbar(im)
                 plt.show()
