@@ -15,7 +15,7 @@ class Analysis(Catalogue):
     """
 
     def get_psf(self, image, cat, mean, rms, poisson, psf_type='moffat', restrict_psf=None, kwargs_cut=None
-                , cutfixed=33, symmetry=1, inverse_shift=True):
+                , cutfixed=33, symmetry=1, inverse_shift=True, vmax=None, vmin=-5.5):
         """
         fit a given psf model
         :param image: cutout image to fit a profile on
@@ -31,10 +31,11 @@ class Analysis(Catalogue):
         fitting = Fitting()
         mean_list = fitting.fit_sample(star_list, mean, rms, poisson, n_walk=50, n_iter=50, threadCount=1, psf_type=psf_type)
         kernel, mean_list, restrict_psf, star_list_shift = self.stacking(star_list, mean_list, mean, psf_type
-                                                                         , restrict_psf=restrict_psf, symmetry=symmetry, inverse_shift=inverse_shift)
+                                                                         , restrict_psf=restrict_psf, symmetry=symmetry, inverse_shift=inverse_shift
+                                                                         , vmax=vmax, vmin=vmin)
         return kernel, mean_list, restrict_psf, star_list_shift
 
-    def stacking(self, star_list, mean_list, mean, psf_type, restrict_psf=None, symmetry=1, inverse_shift=True):
+    def stacking(self, star_list, mean_list, mean, psf_type, restrict_psf=None, symmetry=1, inverse_shift=True, vmax=None, vmin=None):
         """
 
         :param star_list:
@@ -65,11 +66,13 @@ class Analysis(Catalogue):
                 print('=== object ===', i, center_x, center_y)
                 import matplotlib.pylab as plt
                 fig, ax1 = plt.subplots()
-                v_max = np.max(np.nan_to_num(np.log10(sym_shifted)))
-                v_min = np.min(np.nan_to_num(np.log10(sym_shifted)))
-                print(v_min, 'test')
-                v_min = max(v_max-5, v_min)
-                im = ax1.matshow(np.log10(sym_shifted), origin='lower',vmin=v_min, vmax=v_max)
+                im = ax1.matshow(np.log10(sym_shifted), origin='lower', vmax=None, vmin=None)
+
+                #v_max = np.max(np.nan_to_num(np.log10(sym_shifted)))
+                #v_min = np.min(np.nan_to_num(np.log10(sym_shifted)))
+                
+                #v_min = max(v_max-5, v_min)
+                #im = ax1.matshow(np.log10(sym_shifted), origin='lower',vmin=v_min, vmax=v_max)
                 plt.axes(ax1)
                 fig.colorbar(im)
                 plt.show()
