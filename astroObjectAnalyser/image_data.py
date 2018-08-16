@@ -21,7 +21,8 @@ class StrongLensImageData(object):
     """
 
     def __init__(self, local_filename=None, local_psf_filename=None, local_wht_filename=None, ra=None, dec=None,
-                 ra_cutout_cent=None, dec_cutout_cent=None, cutout_scale=None, data_type='cosmos'):
+                 ra_cutout_cent=None, dec_cutout_cent=None, cutout_scale=None, data_type='cosmos', wht_extension=1,
+                 sci_extension=0):
 
         """
         initialize data class with file names (absolute paths), coordinates and data type specifications
@@ -39,9 +40,8 @@ class StrongLensImageData(object):
         self.catalogue = Catalogue()
         self.analysis = Analysis()
         self.data_type = data_type
-        self._extension_image = 0
-        self._extension_wht = 1
-
+        self._extension_image = sci_extension  # or'SCI'
+        self._extension_wht = wht_extension  # or 'WHT'
 
     @property
     def data_cutout(self):
@@ -244,12 +244,9 @@ class StrongLensImageData(object):
         """
         self._header_primary = pyfits.getheader(self.local_filename) # this is the primary header which does not contain general information
         file = pyfits.open(self.local_filename)
-        if self.data_type == 'DES' or self.data_type == 'cosmos' or self.data_type == "HST_new":
-            self._header = file[0].header
-        elif self.data_type == 'GEMINI':
-            self._header = file[self._extension_image].header
-        else:
-            self._header = file['SCI'].header  # this is the header of the science image
+        self._header = file[self._extension_image].header
+        #else:
+        #    self._header = file['SCI'].header  # this is the header of the science image
         file.close()
 
     def pixel_scale(self):
@@ -278,14 +275,7 @@ class StrongLensImageData(object):
         array of one full band, do only use this function when really needed as images can be quite large
         """
         file = pyfits.open(self.local_filename)
-        if self.data_type == 'cosmos' or self.data_type == 'DES' or self.data_type == "HST_new":
-            data_full = file[0].data
-        elif self.data_type == "HST":
-            data_full = file['SCI'].data
-        elif self.data_type == 'GEMINI':
-            data_full = file[self._extension_image].data
-        else:
-            data_full = file[0].data
+        data_full = file[self._extension_image].data
         data_full[np.isnan(data_full)] = 0
         file.close()
         return data_full
@@ -294,18 +284,15 @@ class StrongLensImageData(object):
         """
         array of one full band exposure time. do only use this function when really needed as images can be quite large
         """
-        if self.data_type == 'cosmos' or self.data_type == "HST_new":
+        if self.local_wht_filename is not None:
             file = pyfits.open(self.local_wht_filename)
             exp_full = file[0].data
             print("separate exposure map loaded")
         else:
             file = pyfits.open(self.local_filename)
-            if self.data_type == 'DES':
-                exp_full = file[1].data
-            elif self.data_type == 'GEMINI':
-                exp_full = file[self._extension_wht].data
-            else:
-                exp_full = file['WHT'].data
+            exp_full = file[self._extension_wht].data
+            #else:
+            #    exp_full = file['WHT'].data
         exp_full[np.isnan(exp_full)] = 0
         file.close()
         return exp_full

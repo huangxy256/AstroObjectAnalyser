@@ -74,7 +74,7 @@ class StrongLensSystem(object):
 
     def add_image_data_init(self, attrname, local_filename=None, local_psf_filename=None, local_wht_filename=None,
                        ra=None, dec=None, ra_cutout_cent=None, dec_cutout_cent=None,
-                       cutout_scale=None, data_type='HST'):
+                       cutout_scale=None, data_type='HST', sci_extension=0, wht_extension=1):
         """
         adds an image_data class to the astro data object.
         Tries to take over all possible configurations of the object class
@@ -91,7 +91,8 @@ class StrongLensSystem(object):
         imagedata = StrongLensImageData(local_filename=local_filename, local_psf_filename=local_psf_filename,
                                         local_wht_filename=local_wht_filename, ra=ra, dec=dec,
                                         ra_cutout_cent=ra_cutout_cent, dec_cutout_cent=dec_cutout_cent,
-                                        cutout_scale=cutout_scale, data_type=data_type)
+                                        cutout_scale=cutout_scale, data_type=data_type, sci_extension=sci_extension,
+                                        wht_extension=wht_extension)
 
         setattr(self, attrname, imagedata)
         self.available_frames.append(attrname)
