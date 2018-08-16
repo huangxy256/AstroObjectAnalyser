@@ -66,7 +66,7 @@ class Analysis(Catalogue):
                 print('=== object ===', i, center_x, center_y)
                 import matplotlib.pylab as plt
                 fig, ax1 = plt.subplots()
-                im = ax1.matshow(np.log10(sym_shifted), origin='lower', vmax=None, vmin=None)
+                im = ax1.matshow(np.log10(sym_shifted), origin='lower', vmax=vmax, vmin=vmin)
 
                 #v_max = np.max(np.nan_to_num(np.log10(sym_shifted)))
                 #v_min = np.min(np.nan_to_num(np.log10(sym_shifted)))
