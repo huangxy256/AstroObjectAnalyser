@@ -6,9 +6,13 @@ from cosmoHammer import LikelihoodComputationChain
 from cosmoHammer import CosmoHammerSampler
 from cosmoHammer.util import InMemoryStorageUtil
 
-import astrofunc.util as util
-from astrofunc.LensingProfiles.gaussian import Gaussian
-from astrofunc.LightProfiles.moffat import Moffat
+import lenstronomy.Util.util as util
+import lenstronomy.Util.image_util as image_util
+#import astrofunc.util as util
+from lenstronomy.LightModel.Profiles.gaussian import Gaussian
+#from astrofunc.LensingProfiles.gaussian import Gaussian
+from lenstronomy.LightModel.Profiles.moffat import Moffat
+#from astrofunc.LightProfiles.moffat import Moffat
 
 
 class Chain(object):
@@ -47,7 +51,7 @@ class Chain(object):
         center_x = args[2]
         center_y = args[3]
         model = self.gaussian.function(self.x_grid, self.y_grid, amp, sigma, sigma, center_x, center_y)
-        X2 = util.compare(model, self.image, self.background, self.poisson)
+        X2 = self.compare(model, self.image, self.background, self.poisson)
         return -X2, None
 
     def X2_chain_moffat(self, args):
@@ -60,8 +64,21 @@ class Chain(object):
         center_x = args[3]
         center_y = args[4]
         model = self.moffat.function(self.x_grid, self.y_grid, amp, alpha, beta, center_x, center_y)
-        X2 = util.compare(model, self.image, self.background, self.poisson)
+        X2 = self.compare(model, self.image, self.background, self.poisson)
         return -X2, None
+
+    def compare(self, model, data, sigma, poisson):
+        """
+
+        :param model: model 2d image
+        :param data: data 2d image
+        :param sigma: minimal noise level of background (float>0 or as image)
+        :return: X^2 value if images have same size
+        """
+        deltaIm = (data - model) ** 2
+        relDeltaIm = deltaIm / (sigma ** 2 + np.abs(model) / poisson)
+        X2_estimate = np.sum(relDeltaIm)
+        return X2_estimate
 
     def __call__(self, a):
         if self.sampling_option == 'psf_gaussian':
@@ -198,7 +215,7 @@ class Fitting(object):
         mean_list = np.zeros((n, numParam))
         for i in range(n):
             image = star_list[i]
-            image = util.cut_edges(image, 33)
+            image = image_util.cut_edges(image, 33)
             if psf_type == 'gaussian'or psf_type == 'pixel':
                 mean_list[i] = self.gaussian_fit(image, mean, sigma, poisson,n_walker=n_walk, n_iter=n_iter, threadCount = threadCount)
             elif psf_type == 'moffat':

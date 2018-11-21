@@ -1,6 +1,7 @@
 __author__ = 'amaraa & sibirrer'
 
-import astrofunc.constants as const
+#import astrofunc.constants as const
+import lenstronomy.Util.constants as const
 import astropy.units as u
 import numpy as np
 from astrofunc.Footprint.footprint import CheckFootprint
@@ -25,7 +26,6 @@ class StrongLensSystem(object):
         self.name = name
         self.tile_name = name
         self.available_frames = []
-
 
     def add_info_attribute(self, attrname, info_data, replace=False):
         """

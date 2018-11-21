@@ -370,7 +370,7 @@ class StrongLensImageData(object):
         head = self.change_header(head, xmin, xmax, ymin, ymax)
         img = self.image_full()[int(ymin):int(ymax), int(xmin):int(xmax)].copy()
         # img = file['SCI'].data[ymin:ymax, xmin:xmax]
-        if verbose: print("Cut image %s with dims %s to %s.  xrange: %f:%f, yrange: %f:%f" % (fits_filename, file['SCI'].data.shape, img.shape, xmin, xmax, ymin, ymax))
+        if verbose: print("Cut image %s to %s. xrange: %f:%f, yrange: %f:%f" % (fits_filename, img.shape, xmin, xmax, ymin, ymax))
         if exposure_map:
             exp_map = self.exposure_full()[int(ymin):int(ymax), int(xmin):int(xmax)].copy()
         else:
