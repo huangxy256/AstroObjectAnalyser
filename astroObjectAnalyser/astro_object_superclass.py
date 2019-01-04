@@ -487,7 +487,7 @@ class StrongLensSystem(object):
         :return: SourceExtractor raw output HDUFile
         """
         image_data_obj = getattr(self, attrname)
-        HDUFile, image_no_border = image_data_obj.get_HDUFile(force)
+        HDUFile, image_no_border = image_data_obj.HDUFile(force)
         return HDUFile, image_no_border
 
     def convert_angel_units(self):

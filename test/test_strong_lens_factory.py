@@ -8,7 +8,6 @@ import pytest
 import os
 # from lenstronomy.data_collection.data_manager import DataManager
 from astroObjectAnalyser.data_collection.strong_lens_system_factory import StrongLensSystemFactory as SLsys_fac
-from mock import patch
 
 
 STRONG_LENS_SYSTEMS_PATH = os.path.join(os.path.dirname(__file__), 'Test_data','strong_lens_systems.fits')
@@ -45,11 +44,11 @@ class TestLenstronomy(object):
         # assert RXJ1131.data_cat.z_lens == '0.295'
         # assert RXJ1131.data_image.r_band == 'name_of_fits_file.fits'
 
-
     def teardown(self):
         os.remove(os.path.join(self.scratch_path, "strong_lens_systems.fits"))
         print("tearing down " + __name__)
         pass
+
 
 if __name__ == '__main__':
     pytest.main("-k TestLenstronomy")

@@ -59,7 +59,7 @@ class StrongLensImageData(object):
     @property
     def header_cutout(self):
         if not hasattr(self, '_header_cutout'):
-            print('WARINING: New cutout image is built with default number of pixels.')
+            print('WARNING: New cutout image is built with default number of pixels.')
             self.image_cutout(self.ra_cutout_cent, self.dec_cutout_cent, self.cutout_scale)
         return self._header_cutout
 
@@ -183,7 +183,6 @@ class StrongLensImageData(object):
         if not hasattr(self, '_ra_coords_cutout') or not hasattr(self, '_dec_coords_cutout'):
             self.image_cutout(self.ra_cutout_cent, self.dec_cutout_cent, self.cutout_scale)
         cos_dec = np.cos(self.dec / 360 * 2 * np.pi)
-        print('test', cos_dec)
         ra_coords_sub, dec_coord_sub = util.make_subgrid(self._ra_coords_cutout*cos_dec, self._dec_coords_cutout, subgrid_res)
 
         return ra_coords_sub, dec_coord_sub
@@ -253,9 +252,8 @@ class StrongLensImageData(object):
         """
         returns the pixel scale of the image (units still unclear!!!)
         """
-        if not hasattr(self,'header'):
+        if not hasattr(self, 'header'):
             self.header_info()
-
         self._cd1 = self.header.get('CDELT1') if self.header.get('CDELT1') else np.sqrt(self.header.get('CD1_1')**2 + self.header.get('CD1_2')**2)
         self._cd2 = self.header.get('CDELT2') if self.header.get('CDELT2') else np.sqrt(self.header.get('CD2_1')**2 + self.header.get('CD2_2')**2)
         if self.cd1 is None or self.cd2 is None:
@@ -325,7 +323,7 @@ class StrongLensImageData(object):
             xw, yw = int(cutout_scale/2), int(cutout_scale/2)
             self._data_cutout, self._header_cutout, exp_map, self._ra_coords_cutout, self._dec_coords_cutout =\
                 self._cutout(self.local_filename, xc, yc, xw, yw, exposure_map=exposure_map)
-            if exposure_map:
+            if exposure_map is True:
                 self._exposure_map = exp_map
         pass
 
