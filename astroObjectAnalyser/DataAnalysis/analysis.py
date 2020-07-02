@@ -57,7 +57,7 @@ class Analysis(Catalogue):
                 else:
                     raise ValueError('psf type %s not valid' % psf_type)
                 data[data < 0] = 0
-                if inverse_shift:
+                if inverse_shift is True:
                     shifted = util.de_shift_kernel(data, shift_x=-center_x-0.5, shift_y=-center_y-0., iterations=10)
                 else:
                     shifted = interp.shift(data, [-center_y - 0.5, -center_x - 0.5], order=1)

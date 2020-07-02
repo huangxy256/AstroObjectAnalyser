@@ -400,8 +400,8 @@ class StrongLensImageData(object):
         :param wcs: coordinate class initialized with the fits file of the original image
         :return: ra_coord, dec_coord in units of arc seconds centered to the cutout position
         """
-        x_coords = np.linspace(x_min, x_max-1, x_max - x_min)
-        y_coords = np.linspace(y_min, y_max-1, y_max - y_min)
+        x_coords = np.linspace(int(x_min), int(x_max - 1), int(x_max - x_min))
+        y_coords = np.linspace(int(y_min), int(y_max - 1), int(y_max - y_min))
         x_coords, y_coords = np.meshgrid(x_coords, y_coords)
         ra_coords, dec_coords = wcs.all_pix2world(x_coords, y_coords, 0)
         ra_coords -= self.ra

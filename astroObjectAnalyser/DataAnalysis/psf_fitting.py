@@ -185,9 +185,7 @@ class Fitting(object):
             X2_list.append(pso.gbest.fitness*2)
             vel_list.append(pso.gbest.velocity)
             pos_list.append(pso.gbest.position)
-
-
-        print(pso.gbest.fitness/np.sum(X2_chain.mask), 'reduced X^2 of best position')
+        #print(pso.gbest.fitness/np.sum(X2_chain.mask), 'reduced X^2 of best position')
         if print_positions == True:
             print(pso.gbest.position)
         result = tuple(pso.gbest.position)
