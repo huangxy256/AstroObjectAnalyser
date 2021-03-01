@@ -138,7 +138,7 @@ class Analysis(Catalogue):
         psf_size = len(kernel)
         kernel_mean = util.image2array(kernel)
         weights = np.zeros(len(star_list))
-        cov_i = np.zeros((psf_size**2,psf_size**2))
+        cov_i = np.zeros((psf_size**2, psf_size**2))
         num_stars = len(star_list)
         for i in range(0, num_stars):
             star_list_i = star_list[i].copy()

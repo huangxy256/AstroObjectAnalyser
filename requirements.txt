@@ -1,3 +1,4 @@
 wheel>=0.22
 cosmoHammer
 -e git://github.com/sibirrer/astrofunc.git#egg=astrofunc
+-e git://github.com/sibirrer/pyextractor.git#egg=pyextract
