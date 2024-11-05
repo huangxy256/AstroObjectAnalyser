@@ -155,6 +155,15 @@ class StrongLensSystem(object):
         """
         image_data_obj = getattr(self, attrname)
         return image_data_obj.image_full()
+    
+    def get_full_exposure(self, attrname):
+        """
+
+        :param attrname: image name
+        :return: full exposure map
+        """
+        image_data_obj = getattr(self, attrname)
+        return image_data_obj.exposure_full()
 
     def show_path2file(self, attrname):
         """
